@@ -185,6 +185,17 @@ export async function POST(req) {
     if (!sheetResponse.ok) {
       throw new Error(`Google Apps Script error: ${sheetResponse.status}`);
     }
+    // ارسال اعلان فوری به تلگرام مربی
+    await sendTelegramLeadAlert({
+      fileId,
+      name,
+      phone,
+      plan: finalTitle,
+      price: finalPrice || "-",
+      targetKcal: targetCaloriesStr,
+      bioZone,
+      macros: macrosStr,
+    });
 
     return NextResponse.json({
       success: true,
@@ -198,5 +209,56 @@ export async function POST(req) {
       { success: false, error: error.message || "فشل في تسجيل البيانات." },
       { status: 500 },
     );
+  }
+}
+async function sendTelegramLeadAlert({
+  fileId,
+  name,
+  phone,
+  plan,
+  price,
+  targetKcal,
+  bioZone,
+  macros,
+}) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const coachChatId = process.env.COACH_TELEGRAM_CHAT_ID;
+
+  if (!botToken || !coachChatId) return;
+
+  const cleanPhone = String(phone).replace(/[^\d]/g, "");
+
+  const messageText =
+    `🔔 *مشترك جديد عبر الموقع* (#${fileId})\n\n` +
+    `👤 *الاسم:* ${name}\n` +
+    `📞 *الهاتف:* \`${phone}\`\n` +
+    `💎 *الباقة:* ${plan} (${price})\n` +
+    `🎯 *السعرات:* ${targetKcal}\n` +
+    `🛡️ *فحص المفاصل:* ${bioZone}\n` +
+    `🥗 *الماكروز:* \`${macros}\`\n\n` +
+    `⚡️ اضغط أدناه للتواصل عبر واتساب:`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: coachChatId,
+        text: messageText,
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "💬 فتح محادثة WhatsApp مباشرة",
+                url: `https://wa.me/${cleanPhone}`,
+              },
+            ],
+          ],
+        },
+      }),
+    });
+  } catch (error) {
+    console.error("Failed to send telegram notification:", error);
   }
 }
