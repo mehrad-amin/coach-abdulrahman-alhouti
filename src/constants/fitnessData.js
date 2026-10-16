@@ -544,7 +544,7 @@ export const PAGE_CONTENT = {
     },
     footer: {
       rights: "جميع الحقوق محفوظة للكابتن عبدالرحمن فيصل الحوطي.",
-      developedBy: "Developed by mehrad_amin",
+      developedBy: "Developed by @coach_rise",
     },
     methodology: {
       badge: "خلفية أكاديمية وخبرة ميدانية",
