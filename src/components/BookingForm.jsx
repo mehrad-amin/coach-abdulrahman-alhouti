@@ -1,0 +1,842 @@
+// src/components/BookingForm.jsx
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import {
+  Activity,
+  Flame,
+  Sparkles,
+  ShieldCheck,
+  Check,
+  X,
+  User,
+  Phone,
+  Target,
+  Dumbbell,
+  FileText,
+  ArrowLeft,
+  ArrowRight,
+  ExternalLink,
+} from "lucide-react";
+import { PRICING_PLANS } from "@/constants/fitnessData";
+
+const BOOKING_UI_TEXT = {
+  ar: {
+    sectionBadge: "الخطوة النهائية نحو أهدافك",
+    sectionTitle: "استمارة التسجيل واعتماد الملف الفسيولوجي",
+    sectionSubtitle:
+      "تم ربط جميع بياناتك الحيوية وأولويات فحصك الحركي تلقائياً بهذه الاستمارة لتصل للكابتن عبدالرحمن كاملة بدقة.",
+
+    // بج‌های بالای فرم
+    badgesContainerTitle: "البيانات المسجلة تلقائياً من جولتك في الموقع:",
+    badgeBiomechanicsTitle: "فحص السلسلة الحركية والمفاصل",
+    badgeCalculatorTitle: "التحليل الأيضي والهدف البدني",
+    badgePlanTitle: "الباقة المختارة",
+    screeningFocusLabel: "أولوية الفحص:",
+    targetKcalLabel: "السعرات المستهدفة:",
+    forecastLabel: "الهدف بعد 12 أسبوعاً:",
+    dismissBadge: "إلغاء الإرفاق",
+
+    // بخش‌های فرم
+    planSectionTitle: "تأكيد الباقة التدريبية",
+    nameLabel: "الاسم الكامل",
+    namePlaceholder: "مثال: عبدالمحسن المطيري",
+    phoneLabel: "رقم الواتساب (للتواصل المباشر واستلام الخطة)",
+    phonePlaceholder: "+965 99xx xxxx",
+    goalLabel: "الهدف الأساسي من الاشتراك",
+    experienceLabel: "الخبرة في تمارين المقاومة والحديد",
+    notesLabel: "ملاحظات إضافية أو إصابات سابقة (اختياري)",
+    notesPlaceholder:
+      "أي إصابات سابقة، حساسيات غذائية، أو تفاصيل تفضل مشاركتها مع الكابتن...",
+
+    submitLoading: "جاري ربط الملف وإرسال البيانات للأنظمة الفسيولوجية...",
+    submitPrefix: "تأكيد حجز",
+    submitSuffix: "والبدء مع الكابتن",
+    defaultError: "حدث خطأ أثناء معالجة البيانات، يرجى المحاولة لاحقاً.",
+    unexpectedError: "تعذر الاتصال بالخادم، يرجى إعادة المحاولة.",
+
+    success: {
+      title: "تم استلام ملفك الرياضي بنجاح! ",
+      confirmed: "الباقة المعتمدة:",
+      desc: "تم تسجيل كافة بياناتك الحيوية وأولويات فحصك الحركي في قاعدة بيانات الكابتن عبدالرحمن. يمكنك بدء المحادثة وتأكيد اشتراكك الآن بلمسة واحدة عبر واتساب.",
+      whatsappBtn: "فتح محادثة واتساب المباشرة مع الكابتن",
+      newFormBtn: "تسجيل استمارة جديدة",
+      fileIdLabel: "رقم الملف التدريبي:",
+      waHello: "مرحباً كابتن عبدالرحمن 👋",
+      waIm: "أنا",
+      waRegistered: "أتممت التسجيل عبر موقعك الرسمي في باقة:",
+      waBiometricsHeader: "📊 ملخص تقريري البدني والحركي:",
+      waBioZone: "نقطة التركيز الحركي:",
+      waBioFocus: "أولوية المراجعة:",
+      waTargetCal: "السعرات المبرمجة:",
+      waWeight: "الوزن الحالي:",
+      waReady: "بانتظار مراجعتك واعتماد برنامجي المخصص للبدء معك إن شاء الله.",
+    },
+
+    goals: [
+      { id: "cut", label: "خسارة الدهون والتنشيف العضلي الصافي" },
+      { id: "bulk", label: "الضخامة والبناء العضلي بدون دهون زائدة" },
+      { id: "maintain", label: "إعادة تشكيل القوام ورفع اللياقة والتحمل" },
+      { id: "competition", label: "الإعداد الرياضي والتأهيل الميداني" },
+    ],
+    experienceLevels: [
+      { id: "beginner", label: "مبتدئ (أقل من 6 أشهر)" },
+      { id: "intermediate", label: "متوسط (1 إلى 3 سنوات)" },
+      { id: "advanced", label: "متقدم (أكثر من 3 سنوات)" },
+    ],
+  },
+  en: {
+    sectionBadge: "Final Step",
+    sectionTitle: "Application & Athletic Onboarding",
+    sectionSubtitle:
+      "All your dynamic assessments, movement screening priorities, and targets are synced and pinned to this form.",
+    badgesContainerTitle: "Auto-Captured Metrics & Audits from Your Session:",
+    badgeBiomechanicsTitle: "Kinetic Chain Screening (3D)",
+    badgeCalculatorTitle: "Metabolic Blueprint",
+    badgePlanTitle: "Selected Tier",
+    screeningFocusLabel: "Screening Focus:",
+    targetKcalLabel: "Target Calories:",
+    forecastLabel: "12-Week Target:",
+    dismissBadge: "Remove",
+
+    planSectionTitle: "Confirm Coaching Plan",
+    nameLabel: "Full Name",
+    namePlaceholder: "e.g. David Miller",
+    phoneLabel: "WhatsApp Phone (For Instant Onboarding)",
+    phonePlaceholder: "+965 99xx xxxx",
+    goalLabel: "Primary Objective",
+    experienceLabel: "Resistance Training Experience",
+    notesLabel: "Additional Notes or Injuries (Optional)",
+    notesPlaceholder:
+      "Any past injuries, dietary constraints, or notes for Coach...",
+
+    submitLoading: "Encrypting file & synchronizing systems...",
+    submitPrefix: "Confirm Enrollment in",
+    submitSuffix: "and Start Now",
+    defaultError: "Error submitting your assessment. Please try again.",
+    unexpectedError: "Unexpected server error. Please try again.",
+
+    success: {
+      title: "Assessment Successfully Logged!",
+      confirmed: "Confirmed Tier:",
+      desc: "Your complete kinetic chain screening profile and metabolic roadmap have been delivered to Coach Abdulrahman's system.",
+      whatsappBtn: "Open Instant WhatsApp Chat with Coach",
+      newFormBtn: "Submit Another Request",
+      fileIdLabel: "Client File ID:",
+      waHello: "Hello Coach Abdulrahman 👋",
+      waIm: "I am",
+      waRegistered: "I completed my registration on your platform for:",
+      waBiometricsHeader: "📊 My Physical Profile Summary:",
+      waBioZone: "Biomechanical Focus:",
+      waBioFocus: "Screening Priority:",
+      waTargetCal: "Target Intake:",
+      waWeight: "Current Weight:",
+      waReady: "Looking forward to receiving my customized program.",
+    },
+
+    goals: [
+      { id: "cut", label: "Fat Loss & Muscle Definition (Cut)" },
+      { id: "bulk", label: "Lean Muscle Hypertrophy (Bulk)" },
+      { id: "maintain", label: "Recomposition & Athletic Fitness" },
+      { id: "competition", label: "Sports Performance & Conditioning" },
+    ],
+    experienceLevels: [
+      { id: "beginner", label: "Beginner (< 6 months)" },
+      { id: "intermediate", label: "Intermediate (1–3 years)" },
+      { id: "advanced", label: "Advanced (> 3 years)" },
+    ],
+  },
+};
+
+export default function BookingForm({ lang = "ar" }) {
+  const isRtl = lang === "ar";
+  const ui = BOOKING_UI_TEXT[lang] || BOOKING_UI_TEXT.ar;
+  const availablePlans = PRICING_PLANS[lang] || PRICING_PLANS.ar;
+
+  // ۱. استیت فرم پایه
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    selectedPlanId: availablePlans[1]?.id || "pro",
+    goal: "cut",
+    experience: "beginner",
+    notes: "",
+  });
+
+  // ۲. استیت‌های ذخیره‌شده از سکشن‌های دیگر
+  const [calcData, setCalcData] = useState(null);
+  const [biomechanicsData, setBiomechanicsData] = useState(null);
+  const [selectedPlanMeta, setSelectedPlanMeta] = useState(null);
+
+  const [status, setStatus] = useState({
+    loading: false,
+    success: false,
+    error: "",
+  });
+  const [resultMeta, setResultMeta] = useState({ coachPhone: "", fileId: "" });
+
+  // لود اولیه از sessionStorage و تنظیم لیسنرهای رویداد زنده
+  useEffect(() => {
+    try {
+      const storedCalc = sessionStorage.getItem("user_fitness_data");
+      if (storedCalc) setCalcData(JSON.parse(storedCalc));
+
+      const storedBio = sessionStorage.getItem("user_biomechanics_audit");
+      if (storedBio) setBiomechanicsData(JSON.parse(storedBio));
+
+      const storedPlan = sessionStorage.getItem("user_selected_plan");
+      if (storedPlan) {
+        const parsed = JSON.parse(storedPlan);
+        setSelectedPlanMeta(parsed);
+        if (parsed.id)
+          setFormData((prev) => ({ ...prev, selectedPlanId: parsed.id }));
+      }
+    } catch (e) {
+      console.warn("Storage sync error:", e);
+    }
+
+    // ۱. لیسنر ماشین‌حساب
+    const handleCalcUpdate = (e) => {
+      if (e?.detail) {
+        setCalcData(e.detail);
+        if (e.detail.result?.goalKey) {
+          setFormData((prev) => ({ ...prev, goal: e.detail.result.goalKey }));
+        }
+      } else {
+        setCalcData(null);
+      }
+    };
+
+    // ۲. لیسنر بیومکانیک و زنجیره حرکتی
+    const handleBioUpdate = (e) => {
+      if (e?.detail) setBiomechanicsData(e.detail);
+    };
+
+    // ۳. لیسنر پلن‌های قیمتی
+    const handlePlanSelect = (e) => {
+      const plan = e?.detail;
+      if (plan) {
+        setSelectedPlanMeta(plan);
+        const planId = plan.id || plan.planId;
+        if (planId) {
+          setFormData((prev) => ({ ...prev, selectedPlanId: planId }));
+        }
+      }
+    };
+
+    window.addEventListener("fitness_calc_updated", handleCalcUpdate);
+    window.addEventListener("biomechanics_audit_updated", handleBioUpdate);
+    window.addEventListener("plan_selected", handlePlanSelect);
+    window.addEventListener("fitness_plan_selected", handlePlanSelect);
+
+    return () => {
+      window.removeEventListener("fitness_calc_updated", handleCalcUpdate);
+      window.removeEventListener("biomechanics_audit_updated", handleBioUpdate);
+      window.removeEventListener("plan_selected", handlePlanSelect);
+      window.removeEventListener("fitness_plan_selected", handlePlanSelect);
+    };
+  }, []);
+
+  // هندلرهای حذف اختصاصی هر بج توسط کاربر
+  const handleRemoveBiomechanics = useCallback(() => {
+    try {
+      sessionStorage.removeItem("user_biomechanics_audit");
+      document.cookie = "user_biomechanics_audit=; path=/; max-age=0";
+    } catch (_) {}
+    setBiomechanicsData(null);
+  }, []);
+
+  const handleRemoveCalculator = useCallback(() => {
+    try {
+      sessionStorage.removeItem("user_fitness_data");
+    } catch (_) {}
+    setCalcData(null);
+  }, []);
+
+  const handleRemovePlan = useCallback(() => {
+    try {
+      sessionStorage.removeItem("user_selected_plan");
+      document.cookie = "user_selected_plan=; path=/; max-age=0";
+    } catch (_) {}
+    setSelectedPlanMeta(null);
+  }, []);
+
+  const currentPlan =
+    availablePlans.find((p) => p.id === formData.selectedPlanId) ||
+    availablePlans[1] ||
+    availablePlans[0];
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // سابمیت فرم به روت سرور
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus({ loading: true, success: false, error: "" });
+
+    // ۱. دریافت دیتای ماشین‌حساب
+    let currentStats = calcData;
+    if (!currentStats) {
+      try {
+        const stored = sessionStorage.getItem("user_fitness_data");
+        if (stored) currentStats = JSON.parse(stored);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ۲. دریافت دیتای آناتومی سه‌بعدی و مفصل
+    let currentBio = biomechanicsData;
+    if (!currentBio) {
+      try {
+        const storedBio = sessionStorage.getItem("user_biomechanics_audit");
+        if (storedBio) currentBio = JSON.parse(storedBio);
+      } catch (_) {}
+    }
+
+    // ۳. دریافت پلن و قیمت دقیق انتخابی با رفع باگ ReferenceError
+    let currentStoredPlan = selectedPlanMeta;
+    if (!currentStoredPlan) {
+      try {
+        const storedPlan = sessionStorage.getItem("user_selected_plan");
+        if (storedPlan) currentStoredPlan = JSON.parse(storedPlan);
+      } catch (_) {}
+    }
+
+    const finalPlanTitle = currentStoredPlan?.title || currentPlan.title;
+    const finalPlanPrice = currentStoredPlan?.price || currentPlan.price || "-";
+    const finalPlanDuration =
+      currentStoredPlan?.duration || currentPlan.duration || "-";
+
+    const currentGoalLabel =
+      ui.goals.find((g) => g.id === formData.goal)?.label || formData.goal;
+    const currentExpLabel =
+      ui.experienceLevels.find((exp) => exp.id === formData.experience)
+        ?.label || formData.experience;
+
+    try {
+      const res = await fetch("/api/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          selectedPlan: finalPlanTitle,
+          planPrice: finalPlanPrice,
+          planDuration: finalPlanDuration,
+          goal: currentGoalLabel,
+          goalKey: formData.goal,
+          experience: currentExpLabel,
+          notes: formData.notes,
+          calculatedStats: currentStats || null,
+          biomechanics: currentBio || null,
+          locale: lang,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || ui.defaultError);
+      }
+
+      setResultMeta({
+        coachPhone:
+          data.coachPhone || process.env.NEXT_PUBLIC_COACH_WHATSAPP_PHONE || "",
+        fileId: data.fileId || "",
+      });
+      setStatus({ loading: false, success: true, error: "" });
+    } catch (err) {
+      setStatus({
+        loading: false,
+        success: false,
+        error: err.message || ui.unexpectedError,
+      });
+    }
+  };
+
+  // =========================================================================
+  // کارت وضعیت موفقیت آمیز با دکمه اتصال مستقیم به واتس‌اپ مربی
+  // =========================================================================
+  if (status.success) {
+    const cleanPhone = resultMeta.coachPhone
+      .replace(/\+/g, "")
+      .replace(/\s/g, "");
+
+    const bioZoneName = isRtl
+      ? biomechanicsData?.nameAr || biomechanicsData?.name
+      : biomechanicsData?.nameEn || biomechanicsData?.name;
+
+    const bioBadge = isRtl
+      ? biomechanicsData?.badgeAr ||
+        biomechanicsData?.screeningFocus ||
+        biomechanicsData?.riskReduction
+      : biomechanicsData?.badgeEn ||
+        biomechanicsData?.screeningFocus ||
+        biomechanicsData?.riskReduction;
+
+    const bioText = biomechanicsData
+      ? `\n${ui.success.waBioZone} *${bioZoneName}* (${bioBadge})`
+      : "";
+
+    const calText = calcData?.result?.targetCalories
+      ? `\n${ui.success.waTargetCal} ${calcData.result.targetCalories} kcal`
+      : "";
+
+    const weightText = calcData?.weight
+      ? `\n${ui.success.waWeight} ${calcData.weight} kg`
+      : "";
+
+    const waMessage = `${ui.success.waHello}\n${ui.success.waIm} *${formData.name}*، ${ui.success.waRegistered}\n📌 *${currentPlan.title}* (${currentPlan.duration})\n📋 ${ui.success.fileIdLabel} \`\`\`${resultMeta.fileId}\`\`\`\n\n${ui.success.waBiometricsHeader}${weightText}${calText}${bioText}\n\n${ui.success.waReady}`;
+
+    const waLink = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
+      : `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+    return (
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-fitness-primary/50 bg-gradient-to-b from-[#0f1f15] via-zinc-950 to-black p-8 text-center shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_50px_rgba(34,197,94,0.2)] md:p-12">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-fitness-primary/50 bg-fitness-primary/20 text-fitness-primary shadow-[0_0_30px_rgba(34,197,94,0.4)]">
+          <Check className="h-8 w-8 stroke-[3]" />
+        </div>
+
+        <span className="mt-5 inline-block font-mono text-xs font-bold text-fitness-primary">
+          {ui.success.fileIdLabel} {resultMeta.fileId}
+        </span>
+
+        <h3 className="mt-2 text-2xl sm:text-3xl font-black text-white">
+          {ui.success.title}
+        </h3>
+
+        <p className="mx-auto mt-2 text-sm text-fitness-primary font-bold">
+          {ui.success.confirmed} {currentPlan.title} ({currentPlan.duration})
+        </p>
+
+        <p className="mx-auto mt-3 max-w-lg text-xs leading-relaxed text-zinc-400 sm:text-sm">
+          {ui.success.desc}
+        </p>
+
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 px-8 py-4 text-sm font-black text-black shadow-[0_0_30px_rgba(34,197,94,0.45)] transition-all hover:shadow-[0_0_40px_rgba(34,197,94,0.6)] active:scale-[0.98] sm:w-auto"
+          >
+            <span>{ui.success.whatsappBtn}</span>
+            <ExternalLink className="h-4 w-4" />
+          </a>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormData({
+                name: "",
+                phone: "",
+                selectedPlanId: availablePlans[1]?.id || "pro",
+                goal: "cut",
+                experience: "beginner",
+                notes: "",
+              });
+              setCalcData(null);
+              setBiomechanicsData(null);
+              setSelectedPlanMeta(null);
+              setStatus({ loading: false, success: false, error: "" });
+            }}
+            className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 px-6 py-4 text-xs font-bold text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white sm:w-auto cursor-pointer"
+          >
+            {ui.success.newFormBtn}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const hasAnyBadge = Boolean(biomechanicsData || calcData || selectedPlanMeta);
+
+  return (
+    <div
+      id="booking"
+      className="relative overflow-hidden rounded-[2.5rem] border border-zinc-800 bg-gradient-to-b from-zinc-950/95 via-[#0c1012] to-black p-6 shadow-[0_25px_60px_rgba(0,0,0,0.85)] md:p-10"
+    >
+      <div className="pointer-events-none absolute -top-24 -start-24 h-72 w-72 rounded-full bg-fitness-primary/10 blur-[120px]" />
+
+      {/* سربرگ فرم */}
+      <div className="mb-8 border-b border-zinc-800/80 pb-6 text-start">
+        <span className="inline-block rounded-full border border-fitness-primary/30 bg-fitness-primary/10 px-3 py-1 font-mono text-[11px] font-bold text-fitness-primary">
+          {ui.sectionBadge}
+        </span>
+        <h2 className="mt-2 text-2xl sm:text-3xl font-black text-white tracking-tight">
+          {ui.sectionTitle}
+        </h2>
+        <p className="mt-1.5 text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed">
+          {ui.sectionSubtitle}
+        </p>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* بخش بج‌های هوشمند (Smart Live Badges) متصل به ۳ سکشن قبلی */}
+      {/* ========================================================================= */}
+      {hasAnyBadge && (
+        <div className="mb-8 space-y-3 rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-[#101b14] via-[#09110d] to-black p-4 sm:p-5 shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+          <div className="flex items-center gap-2 text-xs font-bold text-fitness-primary">
+            <Sparkles className="h-4 w-4" />
+            <span>{ui.badgesContainerTitle}</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            {/* ۱. بج فحص بیومکانیک و آناتومی */}
+            {biomechanicsData && (
+              <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-fitness-primary font-mono">
+                      <Activity className="h-3.5 w-3.5" />
+                      <span>{ui.badgeBiomechanicsTitle}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveBiomechanics}
+                      className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
+                      title={ui.dismissBadge}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  <h4 className="mt-1.5 text-xs font-bold text-white">
+                    {isRtl
+                      ? biomechanicsData.nameAr || biomechanicsData.name
+                      : biomechanicsData.nameEn || biomechanicsData.name}
+                  </h4>
+
+                  {/* خلاصه بررسی یا توصیف کلی متناسب با زبان */}
+                  <p className="mt-1 line-clamp-2 text-[10px] text-zinc-400">
+                    {isRtl
+                      ? biomechanicsData.overviewAr ||
+                        biomechanicsData.dysfunctionAr ||
+                        biomechanicsData.overview
+                      : biomechanicsData.overviewEn ||
+                        biomechanicsData.dysfunctionEn ||
+                        biomechanicsData.overview}
+                  </p>
+                </div>
+
+                {/* نمایش شکیل تگ اولویت بدون علامت منفی قبلی */}
+                <div className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-2 text-[10px]">
+                  <span className="text-zinc-500">
+                    {ui.screeningFocusLabel}
+                  </span>
+                  <span className="font-mono font-bold text-fitness-primary truncate max-w-[65%] text-end">
+                    {isRtl
+                      ? biomechanicsData.badgeAr ||
+                        biomechanicsData.screeningFocus ||
+                        biomechanicsData.riskReduction
+                      : biomechanicsData.badgeEn ||
+                        biomechanicsData.screeningFocus ||
+                        biomechanicsData.riskReduction}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ۲. بج ماشین‌حساب کالری و بیومتریک */}
+            {calcData && (
+              <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-fitness-primary font-mono">
+                      <Flame className="h-3.5 w-3.5" />
+                      <span>{ui.badgeCalculatorTitle}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCalculator}
+                      className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
+                      title={ui.dismissBadge}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="mt-1.5 flex items-baseline gap-2">
+                    <span className="font-mono text-xl font-black text-white">
+                      {calcData.result?.targetCalories ||
+                        calcData.result?.tdee ||
+                        "-"}
+                    </span>
+                    <span className="font-mono text-[10px] text-fitness-primary">
+                      KCAL
+                    </span>
+                    <span className="text-[11px] text-zinc-400 font-semibold ms-auto truncate">
+                      {calcData.weight}kg • {calcData.height}cm
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[10px] text-zinc-400 truncate">
+                    {calcData.result?.goal || calcData.goal}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-2 text-[10px]">
+                  <span className="text-zinc-500">{ui.forecastLabel}</span>
+                  <span className="font-mono font-bold text-fitness-primary truncate">
+                    {calcData.result?.projection?.estimatedWeight ||
+                      "12 Wk Goal"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ۳. بج باقه قیمتی انتخاب‌شده */}
+            {selectedPlanMeta && (
+              <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-fitness-primary font-mono">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>{ui.badgePlanTitle}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemovePlan}
+                      className="cursor-pointer rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
+                      title={ui.dismissBadge}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <h4 className="mt-1.5 text-xs font-bold text-white">
+                    {selectedPlanMeta.title}
+                  </h4>
+                  <p className="mt-1 text-[10px] text-zinc-400">
+                    {selectedPlanMeta.duration}
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-2 text-[10px]">
+                  <span className="text-zinc-500">
+                    {isRtl ? "القيمة:" : "Price:"}
+                  </span>
+                  <span className="font-mono text-xs font-black text-fitness-primary">
+                    {selectedPlanMeta.price}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* فیلدهای فرم ثبت‌نام */}
+      {/* ========================================================================= */}
+      <form onSubmit={handleSubmit} className="space-y-6 text-start">
+        {/* ۱. انتخاب باقه */}
+        <div>
+          <label className="mb-2.5 block text-xs font-bold text-white">
+            {ui.planSectionTitle}{" "}
+            <span className="text-fitness-primary">*</span>
+          </label>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {availablePlans.map((plan) => {
+              const isSelected = formData.selectedPlanId === plan.id;
+              return (
+                <button
+                  key={plan.id}
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      selectedPlanId: plan.id,
+                    }))
+                  }
+                  className={`relative flex flex-col justify-between rounded-2xl border p-3.5 text-start transition-all cursor-pointer ${
+                    isSelected
+                      ? "border-fitness-primary bg-fitness-primary/10 shadow-[0_0_20px_rgba(34,197,94,0.2)] ring-1 ring-fitness-primary/60"
+                      : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
+                  }`}
+                >
+                  <div className="flex w-full items-center justify-between">
+                    <span
+                      className={`text-xs font-black ${
+                        isSelected ? "text-fitness-primary" : "text-white"
+                      }`}
+                    >
+                      {plan.title}
+                    </span>
+                    <span
+                      className={`flex h-4 w-4 items-center justify-center rounded-full border transition-colors ${
+                        isSelected
+                          ? "border-fitness-primary bg-fitness-primary"
+                          : "border-zinc-700"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-black" />
+                      )}
+                    </span>
+                  </div>
+                  <div className="mt-2.5 flex items-baseline justify-between border-t border-zinc-800/80 pt-2 text-[11px]">
+                    <span className="text-zinc-400">{plan.duration}</span>
+                    <span className="font-mono font-bold text-white">
+                      {plan.price}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ۲. نام و شماره واتس‌اپ */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="booking-name"
+              className="mb-2 block text-xs font-medium text-zinc-300"
+            >
+              {ui.nameLabel} <span className="text-fitness-primary">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="booking-name"
+                type="text"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder={ui.namePlaceholder}
+                className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="booking-phone"
+              className="mb-2 block text-xs font-medium text-zinc-300"
+            >
+              {ui.phoneLabel} <span className="text-fitness-primary">*</span>
+            </label>
+            <div className="relative">
+              <input
+                id="booking-phone"
+                type="tel"
+                name="phone"
+                required
+                dir="ltr"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder={ui.phonePlaceholder}
+                className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 font-mono text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary ${
+                  isRtl ? "text-end" : "text-start"
+                }`}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ۳. هدف و سابقه تمرینی */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label
+              htmlFor="booking-goal"
+              className="mb-2 block text-xs font-medium text-zinc-300"
+            >
+              {ui.goalLabel}
+            </label>
+            <select
+              id="booking-goal"
+              name="goal"
+              value={formData.goal}
+              onChange={handleInputChange}
+              className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white outline-none transition-colors focus:border-fitness-primary"
+            >
+              {ui.goals.map((g) => (
+                <option
+                  key={g.id}
+                  value={g.id}
+                  className="bg-zinc-900 text-white"
+                >
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <span className="mb-2 block text-xs font-medium text-zinc-300">
+              {ui.experienceLabel}
+            </span>
+            <div className="grid grid-cols-3 gap-1.5">
+              {ui.experienceLevels.map((exp) => (
+                <button
+                  key={exp.id}
+                  type="button"
+                  onClick={() =>
+                    setFormData((p) => ({ ...p, experience: exp.id }))
+                  }
+                  className={`cursor-pointer rounded-xl border p-2.5 text-center text-[11px] font-bold transition-all ${
+                    formData.experience === exp.id
+                      ? "border-fitness-primary bg-fitness-primary/15 text-fitness-primary"
+                      : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-white"
+                  }`}
+                >
+                  {exp.label.split(" ")[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ۴. یادداشت‌ها و توضیحات تکمیلی */}
+        <div>
+          <label
+            htmlFor="booking-notes"
+            className="mb-2 block text-xs font-medium text-zinc-300"
+          >
+            {ui.notesLabel}
+          </label>
+          <textarea
+            id="booking-notes"
+            rows="3"
+            name="notes"
+            value={formData.notes}
+            onChange={handleInputChange}
+            placeholder={ui.notesPlaceholder}
+            className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary"
+          />
+        </div>
+
+        {/* خطا در صورت وجود */}
+        {status.error && (
+          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-400">
+            {status.error}
+          </div>
+        )}
+
+        {/* دکمه سابمیت */}
+        <button
+          type="submit"
+          disabled={status.loading}
+          className="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 py-4 text-center text-sm font-black text-black shadow-[0_0_35px_rgba(34,197,94,0.4)] transition-all hover:shadow-[0_0_45px_rgba(34,197,94,0.6)] active:scale-[0.98] disabled:opacity-50"
+        >
+          {status.loading ? (
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              <span>{ui.submitLoading}</span>
+            </div>
+          ) : (
+            <>
+              <span>
+                {ui.submitPrefix} {currentPlan.title} {ui.submitSuffix}
+              </span>
+              {isRtl ? (
+                <ArrowLeft className="h-4 w-4" />
+              ) : (
+                <ArrowRight className="h-4 w-4" />
+              )}
+            </>
+          )}
+        </button>
+      </form>
+    </div>
+  );
+}
