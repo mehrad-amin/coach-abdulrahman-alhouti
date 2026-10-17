@@ -10,15 +10,19 @@
     var(--font-arabic), var(--font-english), -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, sans-serif;
 
-  /* پالت رنگی تخصصی کوچینگ و فیتنس مدرن */
-  --color-fitness-bg: #0a0a0c;
-  --color-fitness-surface: #141418;
-  --color-fitness-surface-light: #1e1e24;
-  --color-fitness-border: #282832;
-  --color-fitness-primary: #ccff00;
-  --color-fitness-primary-hover: #b8e600;
-  --color-fitness-text: #f4f4f5;
-  --color-fitness-muted: #9494a0;
+  /* پالت رنگی تخصصی و دارک لوکس آبی (تناسب اندام و توانبخشی ورزشی) */
+  --color-fitness-bg: #07090e; /* مشکی با ته‌رنگ بسیار عمیق سرمه‌ای */
+  --color-fitness-surface: #0e131f; /* سطح کارت‌ها با ته مایه سرمه‌ای تیره */
+  --color-fitness-surface-light: #161d2e; /* سطوح روشن‌تر، هاور کارت‌ها و اینپوت‌ها */
+  --color-fitness-border: #1e293b; /* خطوط جداکننده ملایم با تم اسلیت نوی */
+
+  /* رنگ سازمانی آبی: پرانرژی، درخشان و دارای کنتراست عالی روی دارک */
+  --color-fitness-primary: #00d2ff; /* آبی درخشان اقیانوسی/سیان هایپ (دکمه‌های اصلی و CTA) */
+  --color-fitness-primary-hover: #00b4db; /* حالت هاور دکمه‌ها و المان‌های تعاملی */
+  --color-fitness-accent: #2563eb; /* آبی رویال ورزشی برای سایه‌ها و گلوها (Glow Effects) */
+
+  --color-fitness-text: #f8fafc; /* سفید خالص با خوانایی حداکثری متون عربی */
+  --color-fitness-muted: #94a3b8; /* متن‌های کمکی و ثانویه هماهنگ با تم نوی */
 }
 
 :root {

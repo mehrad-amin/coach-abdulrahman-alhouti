@@ -395,8 +395,9 @@ export default function BookingForm({ lang = "ar" }) {
       : `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
     return (
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-fitness-primary/50 bg-gradient-to-b from-[#0f1f15] via-zinc-950 to-black p-8 text-center shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_50px_rgba(34,197,94,0.2)] md:p-12">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-fitness-primary/50 bg-fitness-primary/20 text-fitness-primary shadow-[0_0_30px_rgba(34,197,94,0.4)]">
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black p-8 text-center shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_50px_rgba(0,210,255,0.12)] md:p-12">
+        {/* آیکون تایید با پس‌زمینه مشکی زینک و آیکون آبی */}
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-fitness-primary/40 bg-zinc-900 text-fitness-primary shadow-[0_0_25px_rgba(0,210,255,0.25)]">
           <Check className="h-8 w-8 stroke-[3]" />
         </div>
 
@@ -404,11 +405,11 @@ export default function BookingForm({ lang = "ar" }) {
           {ui.success.fileIdLabel} {resultMeta.fileId}
         </span>
 
-        <h3 className="mt-2 text-2xl sm:text-3xl font-black text-white">
+        <h3 className="mt-2 text-2xl font-black text-white sm:text-3xl">
           {ui.success.title}
         </h3>
 
-        <p className="mx-auto mt-2 text-sm text-fitness-primary font-bold">
+        <p className="mx-auto mt-2 text-sm font-bold text-fitness-primary">
           {ui.success.confirmed} {currentPlan.title} ({currentPlan.duration})
         </p>
 
@@ -417,16 +418,18 @@ export default function BookingForm({ lang = "ar" }) {
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {/* دکمه اتصال به واتس‌اپ: گرادیانت سبز تبدیل به گرادیانت آبی شد */}
           <a
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 px-8 py-4 text-sm font-black text-black shadow-[0_0_30px_rgba(34,197,94,0.45)] transition-all hover:shadow-[0_0_40px_rgba(34,197,94,0.6)] active:scale-[0.98] sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fitness-primary via-fitness-primary-hover to-fitness-accent px-8 py-4 text-sm font-black text-black shadow-[0_0_30px_rgba(0,210,255,0.35)] transition-all hover:shadow-[0_0_40px_rgba(0,210,255,0.5)] active:scale-[0.98] sm:w-auto"
           >
             <span>{ui.success.whatsappBtn}</span>
             <ExternalLink className="h-4 w-4" />
           </a>
 
+          {/* دکمه بازگشت: کاملاً مشکی/خاکستری و دست‌نخورده مطابق ظاهر فرم */}
           <button
             type="button"
             onClick={() => {
@@ -443,7 +446,7 @@ export default function BookingForm({ lang = "ar" }) {
               setSelectedPlanMeta(null);
               setStatus({ loading: false, success: false, error: "" });
             }}
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 px-6 py-4 text-xs font-bold text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white sm:w-auto cursor-pointer"
+            className="w-full cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/80 px-6 py-4 text-xs font-bold text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white sm:w-auto"
           >
             {ui.success.newFormBtn}
           </button>
@@ -451,7 +454,6 @@ export default function BookingForm({ lang = "ar" }) {
       </div>
     );
   }
-
   const hasAnyBadge = Boolean(biomechanicsData || calcData || selectedPlanMeta);
 
   return (
@@ -478,7 +480,7 @@ export default function BookingForm({ lang = "ar" }) {
       {/* بخش بج‌های هوشمند (Smart Live Badges) متصل به ۳ سکشن قبلی */}
       {/* ========================================================================= */}
       {hasAnyBadge && (
-        <div className="mb-8 space-y-3 rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-[#101b14] via-[#09110d] to-black p-4 sm:p-5 shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+        <div className="mb-8 space-y-3 rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black p-4 sm:p-5 shadow-[0_0_30px_rgba(0,210,255,0.08)]">
           <div className="flex items-center gap-2 text-xs font-bold text-fitness-primary">
             <Sparkles className="h-4 w-4" />
             <span>{ui.badgesContainerTitle}</span>
@@ -649,7 +651,7 @@ export default function BookingForm({ lang = "ar" }) {
                   }
                   className={`relative flex flex-col justify-between rounded-2xl border p-3.5 text-start transition-all cursor-pointer ${
                     isSelected
-                      ? "border-fitness-primary bg-fitness-primary/10 shadow-[0_0_20px_rgba(34,197,94,0.2)] ring-1 ring-fitness-primary/60"
+                      ? "border-fitness-primary bg-fitness-primary/10 shadow-[0_0_20px_rgba(0,210,255,0.2)] ring-1 ring-fitness-primary/60"
                       : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
                   }`}
                 >
@@ -816,7 +818,7 @@ export default function BookingForm({ lang = "ar" }) {
         <button
           type="submit"
           disabled={status.loading}
-          className="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 py-4 text-center text-sm font-black text-black shadow-[0_0_35px_rgba(34,197,94,0.4)] transition-all hover:shadow-[0_0_45px_rgba(34,197,94,0.6)] active:scale-[0.98] disabled:opacity-50"
+          className="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-fitness-primary via-fitness-primary-hover to-fitness-accent py-4 text-center text-sm font-black text-black shadow-[0_0_35px_rgba(0,210,255,0.35)] transition-all hover:shadow-[0_0_45px_rgba(0,210,255,0.55)] active:scale-[0.98] disabled:opacity-50"
         >
           {status.loading ? (
             <div className="flex items-center gap-2">

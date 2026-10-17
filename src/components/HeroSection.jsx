@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useRef, useMemo, useState, useEffect } from "react";
+import { ArrowRight } from "lucide-react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
 import Image from "next/image";
@@ -375,17 +376,20 @@ export default function HeroSection({ lang = "ar" }) {
         <div className="mt-6 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
           <a
             href="#booking"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-fitness-primary px-7 py-3 text-center text-xs sm:text-sm font-black text-black shadow-[0_0_25px_rgba(34,197,94,0.4)] transition-all hover:bg-fitness-primary-hover active:scale-[0.98]"
+            className="group relative inline-flex w-full sm:w-auto items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[#00d2ff] via-[#00b4db] to-[#2563eb] px-7 py-3 text-center text-xs sm:text-sm font-black text-slate-950 shadow-[0_0_25px_rgba(0,210,255,0.45)] transition-all duration-300 hover:shadow-[0_0_35px_rgba(0,210,255,0.65)] hover:brightness-110 active:scale-[0.98]"
           >
+            {/* افکت نوری شیشه‌ای */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/40" />
+
             <span>{content.ctaPrimary}</span>
-            <span className="text-xs transition-transform duration-200 rtl:rotate-180">
-              →
-            </span>
+
+            {/* آیکون Lucide با چرخش خودکار در حالت راست‌به‌چپ (RTL) */}
+            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
           </a>
 
           <a
             href="#calculator"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-950/90 px-5 py-3 text-center text-xs font-bold text-zinc-100 shadow-md backdrop-blur-md transition-all hover:border-fitness-primary hover:text-white"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950/80 px-5 py-3 text-center text-xs font-bold text-slate-200 shadow-md backdrop-blur-md transition-all duration-300 hover:border-[#00d2ff]/60 hover:bg-slate-900/90 hover:text-[#00d2ff] hover:shadow-[0_0_20px_rgba(0,210,255,0.2)] active:scale-[0.98]"
           >
             <span>{content.ctaSecondary}</span>
           </a>

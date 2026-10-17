@@ -53,27 +53,30 @@ function MuscleGlowBeacon({ position, normal }) {
 
   return (
     <group position={finalPos}>
+      {/* نور نقطه‌ای متحرک آبی الکتریک */}
       <pointLight
         ref={lightRef}
-        color="#22c55e"
+        color="#00d2ff"
         intensity={3.8}
         distance={0.9}
         decay={2}
       />
+      {/* هسته مرکزی چراغ با درخشش نئونی آبی */}
       <mesh>
         <sphereGeometry args={[0.034, 16, 16]} />
         <meshStandardMaterial
-          color="#ccff00"
-          emissive="#22c55e"
+          color="#00d2ff"
+          emissive="#2563eb"
           emissiveIntensity={4}
           roughness={0.1}
           toneMapped={false}
         />
       </mesh>
+      {/* حلقه وایرفریم نئونی در حال انبساط */}
       <mesh ref={ringRef}>
         <sphereGeometry args={[0.056, 16, 16]} />
         <meshBasicMaterial
-          color="#ccff00"
+          color="#00d2ff"
           transparent
           opacity={0.8}
           wireframe
@@ -275,9 +278,9 @@ export default function Anatomy3DCanvas({
         <directionalLight
           position={[-4, 2, -2]}
           intensity={1.2}
-          color="#22c55e"
+          color="#2563eb"
         />
-        <pointLight position={[0, -2, 2.8]} intensity={1.0} color="#cbd5e1" />
+        <pointLight position={[0, -2, 2.8]} intensity={1.2} color="#2563eb" />
 
         <Suspense fallback={null}>
           <MuscleModel onBodyClick={onBodyClick} />

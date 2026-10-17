@@ -655,7 +655,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
               ? "الهدف التدريبي المنشود:"
               : "Primary Fitness Objective:"}
           </span>
-          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-zinc-800 bg-black/70 p-1.5">
+          <div className="grid grid-cols-3 gap-2 rounded-2xl border border-fitness-border bg-fitness-surface/80 p-1.5">
             <button
               type="button"
               onClick={() => {
@@ -664,8 +664,8 @@ export default function FitnessCalculator({ lang = "ar" }) {
               }}
               className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                 goal === "cut"
-                  ? "bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-fitness-primary text-fitness-bg shadow-[0_0_15px_var(--color-fitness-primary)/40]"
+                  : "text-fitness-muted hover:text-fitness-text"
               }`}
             >
               <Flame className="h-4 w-4" />
@@ -679,8 +679,8 @@ export default function FitnessCalculator({ lang = "ar" }) {
               }}
               className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                 goal === "maintain"
-                  ? "bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-fitness-primary text-fitness-bg shadow-[0_0_15px_var(--color-fitness-primary)/40]"
+                  : "text-fitness-muted hover:text-fitness-text"
               }`}
             >
               <Scale className="h-4 w-4" />
@@ -694,8 +694,8 @@ export default function FitnessCalculator({ lang = "ar" }) {
               }}
               className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
                 goal === "bulk"
-                  ? "bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.5)]"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-fitness-primary text-fitness-bg shadow-[0_0_15px_var(--color-fitness-primary)/40]"
+                  : "text-fitness-muted hover:text-fitness-text"
               }`}
             >
               <Zap className="h-4 w-4" />
@@ -782,16 +782,16 @@ export default function FitnessCalculator({ lang = "ar" }) {
       </div>
 
       {/* دکمه اصلی تحلیل بیومتریک */}
-      <div className="mt-8 border-t border-zinc-800/80 pt-6">
+      <div className="mt-8 border-t border-fitness-border/80 pt-6">
         <button
           type="button"
           onClick={handleCalculateClick}
           disabled={isCalculating}
-          className="relative flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 py-4 text-center text-sm font-black text-black shadow-[0_0_35px_rgba(34,197,94,0.4)] transition-all hover:shadow-[0_0_45px_rgba(34,197,94,0.6)] active:scale-[0.98] disabled:opacity-75"
+          className="relative flex w-full cursor-pointer items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-gradient-to-r from-fitness-primary via-fitness-primary-hover to-fitness-accent py-4 text-center text-sm font-black text-fitness-bg shadow-[0_0_35px_var(--color-fitness-primary)/35] transition-all hover:shadow-[0_0_45px_var(--color-fitness-primary)/55] active:scale-[0.98] disabled:opacity-75"
         >
           {isCalculating ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-fitness-bg border-t-transparent" />
               <span>{ui.calculatingText}</span>
             </>
           ) : (
@@ -817,20 +817,20 @@ export default function FitnessCalculator({ lang = "ar" }) {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-fitness-primary/30" />
             </div>
-            <span className="relative rounded-full border border-fitness-primary/50 bg-[#0c1012] px-4 py-1 text-[11px] font-black text-fitness-primary shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+            <span className="relative rounded-full border border-fitness-primary/40 bg-[#0c1012] px-4 py-1 text-[11px] font-black text-fitness-primary shadow-[0_0_15px_rgba(0,210,255,0.25)]">
               {ui.resultsTitle}
             </span>
           </div>
 
           {/* کالری و ماکروها */}
-          <div className="relative overflow-hidden rounded-3xl border border-fitness-primary/40 bg-gradient-to-b from-[#111815] via-[#09110d] to-black p-6 shadow-[inset_0_0_30px_rgba(34,197,94,0.15)]">
+          <div className="relative overflow-hidden rounded-3xl border border-zinc-800/90 bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black p-6 shadow-[inset_0_0_30px_rgba(0,210,255,0.08)]">
             <div className="relative z-10 flex flex-col items-center justify-between gap-5 sm:flex-row">
               <div className="text-center sm:text-start">
                 <span className="text-[11px] font-semibold text-zinc-400">
                   {ui.targetLabel}
                 </span>
                 <div className="mt-1 flex items-baseline justify-center gap-2 sm:justify-start">
-                  <span className="font-mono text-5xl font-black tracking-tight text-white drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                  <span className="font-mono text-5xl font-black tracking-tight text-white drop-shadow-[0_0_15px_rgba(0,210,255,0.35)]">
                     {activeTarget}
                   </span>
                   <span className="font-mono text-xs font-bold text-fitness-primary">
@@ -882,7 +882,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
           </div>
 
           {/* تایم‌لاین دگرگونی بدنی */}
-          <div className="rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-[#0f1713] via-[#09100d] to-black p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+          <div className="rounded-3xl border border-zinc-800/90 bg-gradient-to-b from-zinc-900/70 via-zinc-950 to-[#0b0e11] p-5 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
               <div>
                 <span className="inline-block text-[10px] font-bold tracking-wider text-fitness-primary uppercase">
@@ -901,7 +901,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
                     onClick={() => setSelectedWeek(wk)}
                     className={`cursor-pointer rounded-lg px-2.5 py-1 font-mono text-[11px] font-bold transition-all ${
                       selectedWeek === wk
-                        ? "bg-fitness-primary text-black shadow-[0_0_10px_rgba(34,197,94,0.4)]"
+                        ? "bg-fitness-primary text-black shadow-[0_0_12px_rgba(0,210,255,0.35)]"
                         : "text-zinc-400 hover:text-white"
                     }`}
                   >
@@ -921,7 +921,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
                   <span className="text-[10px] text-zinc-400">
                     {ui.targetWeightLabel}
                   </span>
-                  <p className="font-mono text-xl font-black text-fitness-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.3)]">
+                  <p className="font-mono text-xl font-black text-fitness-primary drop-shadow-[0_0_8px_rgba(0,210,255,0.3)]">
                     {currentWeekMetrics.weightRange}
                   </p>
                 </div>
@@ -958,7 +958,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
               className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl py-4 text-center font-black text-xs sm:text-sm transition-all shadow-lg active:scale-[0.98] ${
                 isPinned
                   ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)]"
-                  : "bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 text-black shadow-[0_0_30px_rgba(34,197,94,0.35)] hover:shadow-[0_0_40px_rgba(34,197,94,0.5)]"
+                  : "bg-gradient-to-r from-fitness-primary via-fitness-primary-hover to-fitness-accent text-fitness-bg shadow-[0_0_30px_var(--color-fitness-primary)/35] hover:shadow-[0_0_40px_var(--color-fitness-primary)/50]"
               }`}
             >
               {isPinned ? (
@@ -970,7 +970,7 @@ export default function FitnessCalculator({ lang = "ar" }) {
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="h-4 w-4 text-black" />
+                  <CheckCircle2 className="h-4 w-4 text-fitness-bg" />
                   <span>
                     {ui.ctaPrefix} {activeTarget} {ui.ctaSuffix}
                   </span>

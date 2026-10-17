@@ -653,8 +653,8 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                       onClick={() => handlePresetSelect(z.id)}
                       className={`px-2 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold truncate transition-all cursor-pointer ${
                         isSelected
-                          ? "bg-fitness-primary text-black font-black shadow-[0_0_15px_rgba(34,197,94,0.4)] scale-102"
-                          : "bg-zinc-900/80 text-zinc-300 hover:bg-zinc-800 hover:text-white border border-zinc-800/80"
+                          ? "bg-fitness-primary text-fitness-bg font-black shadow-[0_0_15px_var(--color-fitness-primary)/40] scale-102"
+                          : "bg-fitness-surface/80 text-fitness-muted hover:bg-fitness-surface-light hover:text-fitness-text border border-fitness-border/80"
                       }`}
                     >
                       {isRtl ? z.shortNameAr : z.shortNameEn}
@@ -739,7 +739,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                 </div>
 
                 {/* Methodology Breakdown (In-Person, Online, Medical) */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-[#0e1412] border border-zinc-800 space-y-3">
+                <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/90 space-y-3">
                   <div className="flex items-center gap-2 text-white">
                     <UserCheck className="w-4 h-4 text-fitness-primary shrink-0" />
                     <h4 className="text-xs sm:text-sm font-black">
@@ -797,7 +797,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                 </div>
 
                 {/* Tailored Programming Philosophy (Zero rigid prescription) */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-[#111815] via-[#09110d] to-black border border-fitness-primary/30 text-white space-y-3 shadow-[inset_0_0_30px_rgba(34,197,94,0.08)]">
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black border border-fitness-primary/30 text-white space-y-3 shadow-[inset_0_0_30px_rgba(0,210,255,0.08)]">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs sm:text-sm font-bold text-fitness-primary flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-fitness-primary shrink-0" />
@@ -823,15 +823,15 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                 <button
                   type="button"
                   onClick={handleConfirmZone}
-                  className={`w-full py-3.5 sm:py-4 px-5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg active:scale-[0.98] ${
+                  className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-xs font-black transition-all sm:py-4 sm:text-sm active:scale-[0.98] ${
                     isAttachedToDock
-                      ? "bg-white text-black shadow-[0_0_25px_rgba(255,255,255,0.4)]"
-                      : "bg-gradient-to-r from-emerald-500 via-fitness-primary to-emerald-400 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] text-black shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+                      ? "bg-fitness-text text-fitness-bg shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+                      : "bg-gradient-to-r from-fitness-primary via-fitness-primary-hover to-fitness-accent text-fitness-bg shadow-[0_0_20px_var(--color-fitness-primary)/30] hover:shadow-[0_0_30px_var(--color-fitness-primary)/50]"
                   }`}
                 >
                   {isAttachedToDock ? (
                     <>
-                      <Check className="w-4 h-4 text-black stroke-[3]" />
+                      <Check className="h-4 w-4 stroke-[3] text-fitness-bg" />
                       <span>
                         {isRtl
                           ? `تم تثبيت مراجعة (${shortZoneTitle}) في ملفك بنجاح ✓`
@@ -840,7 +840,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4 shrink-0 text-black" />
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-fitness-bg" />
                       <span>
                         {isRtl
                           ? `اعتماد مراجعة (${shortZoneTitle}) كأولوية في ملفك`

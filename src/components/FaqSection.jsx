@@ -67,9 +67,9 @@ export default function FaqSection({
       <div className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fitness-primary/5 blur-[140px]" />
 
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        {/* هیدور بخش */}
+        {/* هدر بخش */}
         <div className="mb-12 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-fitness-primary/30 bg-fitness-primary/10 px-4 py-1.5 text-xs font-bold text-fitness-primary mb-3 shadow-[0_0_15px_rgba(34,197,94,0.15)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-fitness-primary/30 bg-fitness-primary/10 px-4 py-1.5 text-xs font-bold text-fitness-primary mb-3 shadow-[0_0_15px_rgba(0,210,255,0.15)]">
             <HelpCircle className="h-3.5 w-3.5 text-fitness-primary" />
             <span>{ui.badge}</span>
           </span>
@@ -81,7 +81,7 @@ export default function FaqSection({
           </p>
         </div>
 
-        {/* لیست آکاردئونی سوالات با آیکون‌های وکتوری Lucide */}
+        {/* لیست آکاردئونی سوالات */}
         <div className="space-y-4">
           {activeFaqs.map((faq, idx) => {
             const isOpen = openIndex === idx;
@@ -90,13 +90,13 @@ export default function FaqSection({
             return (
               <div
                 key={idx}
-                className={`relative overflow-hidden rounded-2xl border bg-gradient-to-b from-zinc-950/95 via-zinc-950/80 to-[#0a0d0c] p-5 shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-all duration-300 ${
+                className={`relative overflow-hidden rounded-2xl border bg-gradient-to-b from-zinc-950/95 via-zinc-950/80 to-[#0b0e11] p-5 shadow-[0_10px_25px_rgba(0,0,0,0.5)] transition-all duration-300 ${
                   isOpen
-                    ? "border-fitness-primary/60 shadow-[0_12px_35px_rgba(34,197,94,0.12)] scale-[1.01]"
+                    ? "border-fitness-primary/60 shadow-[0_12px_35px_rgba(0,210,255,0.15)] scale-[1.01]"
                     : "border-zinc-800/90 hover:border-zinc-700"
                 }`}
               >
-                {/* خط نئونی بالای کارت */}
+                {/* خط نئونی بالای کارت در وضعیت باز */}
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-fitness-primary/80 to-transparent transition-opacity duration-300 ${
                     isOpen ? "opacity-100" : "opacity-0"
@@ -129,7 +129,7 @@ export default function FaqSection({
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border transition-all duration-300 ${
                       isOpen
-                        ? "rotate-45 border-fitness-primary/50 bg-fitness-primary/15 text-fitness-primary shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+                        ? "rotate-45 border-fitness-primary/50 bg-fitness-primary/15 text-fitness-primary shadow-[0_0_12px_rgba(0,210,255,0.25)]"
                         : "border-zinc-800 bg-zinc-900/80 text-zinc-400"
                     }`}
                   >
@@ -155,7 +155,7 @@ export default function FaqSection({
           })}
         </div>
 
-        {/* کارت ارتباط مستقیم واتساپ با آیکون‌های وکتوری ArrowLeft و ArrowRight */}
+        {/* کارت ارتباط مستقیم واتساپ */}
         <div className="mt-10 flex flex-col items-center justify-between gap-4 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 p-5 text-center sm:flex-row sm:text-start shadow-xl">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fitness-primary/10 border border-fitness-primary/30 text-fitness-primary">
@@ -175,7 +175,7 @@ export default function FaqSection({
             href={whatsappDirectUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-fitness-primary/40 bg-fitness-primary/10 px-4 py-2.5 text-xs font-bold text-fitness-primary transition-colors hover:bg-fitness-primary hover:text-black cursor-pointer shadow-[0_0_15px_rgba(34,197,94,0.15)] active:scale-95"
+            className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-fitness-primary/40 bg-fitness-primary/10 px-4 py-2.5 text-xs font-bold text-fitness-primary transition-colors hover:bg-fitness-primary hover:text-black cursor-pointer shadow-[0_0_15px_rgba(0,210,255,0.2)] active:scale-95"
           >
             <span>{ui.whatsappBtn}</span>
             {isRtl ? (

@@ -22,6 +22,7 @@ import {
   FAQS,
   PAGE_CONTENT,
 } from "@/constants/fitnessData";
+import PreBookingRequirements from "@/components/PreBookingRequirements";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -93,6 +94,9 @@ export default function FitnessLandingPage() {
 
       {/* ۹. راه‌های ارتباطی */}
       <ContactSection lang={lang} />
+
+      {/* سکشن توضیحات و الزامات مربی */}
+      <PreBookingRequirements lang={lang} />
 
       {/* ۱۰. فرم نهایی ثبت‌نام */}
       <section
