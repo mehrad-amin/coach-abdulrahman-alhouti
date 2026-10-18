@@ -8,7 +8,7 @@ export const HERO_CONTENT = {
     ctaPrimary: "ابدأ الاستشارة واحصل على خطتك",
     ctaSecondary: "حساب السعرات واحتياج الـ TDEE فوراً",
     stats: [
-      { value: "+15 عاماً", label: "مسيرة وخبرة رياضية" },
+      { value: "+6 سنوات", label: "مسيرة وخبرة تدريبية" },
       { value: "+4 رياضات", label: "إشراف وتجهيز بطولات" },
       { value: "100%", label: "أمان طبي وتدريب علمي" },
     ],
@@ -22,7 +22,7 @@ export const HERO_CONTENT = {
     ctaPrimary: "Start Consultation & Get Your Plan",
     ctaSecondary: "Calculate Calories & TDEE Instantly",
     stats: [
-      { value: "+15 Yrs", label: "Athletic & Coaching Journey" },
+      { value: "+6 Yrs", label: "Coaching Journey & Experience" },
       { value: "+4 Sports", label: "Championship Prep Supervision" },
       { value: "100%", label: "Medical Safety & Science-Based" },
     ],
@@ -378,7 +378,7 @@ export const SPOTLIGHT_REVIEWS = {
     {
       id: "spotlight-5",
       clientName: "أحمد ناصر",
-      role: "مهندس - الكويت",
+      role: " الكويت",
       program: "برنامج إعادة التأهيل الرياضي",
       statNumber: "0%",
       statLabel: "زوال آلام الركبة والكتف",
@@ -458,7 +458,7 @@ export const SPOTLIGHT_REVIEWS = {
     {
       id: "spotlight-5",
       clientName: "Ahmed Nasser",
-      role: "Engineer - Kuwait",
+      role: "Kuwait",
       program: "Sports Injury Rehabilitation",
       statNumber: "0%",
       statLabel: "Knee & Shoulder Pain Eliminated",

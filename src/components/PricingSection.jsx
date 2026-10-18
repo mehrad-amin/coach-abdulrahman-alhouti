@@ -67,12 +67,15 @@ function PricingCard({ plan, ui, isSelected, onSelect, lang }) {
     setRotate({ x: 0, y: 0 });
   };
 
+  // دریافت زیرنویس داینامیک از شیت یا تفکیک هوشمند
   const isOnlineTier = plan.id === "online_full";
-  const subtitle = isOnlineTier
-    ? lang === "ar"
-      ? "50 د.ك للطلاب | 70 د.ك للموظفين"
-      : "50 KWD for Students | 70 KWD for Employees"
-    : null;
+  const subtitle = plan.subtitle
+    ? plan.subtitle
+    : isOnlineTier
+      ? lang === "ar"
+        ? "خطة المتابعة الشاملة والتجهيز البدني"
+        : "Comprehensive Coaching & Prep Tier"
+      : null;
 
   return (
     <div
@@ -190,20 +193,44 @@ export default function PricingSection({ plans, lang = "ar" }) {
   const [livePlans, setLivePlans] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState(null);
 
+  // واکشی لحظه‌ای و مستقیم از روت API با دور زدن کش مرورگر
   useEffect(() => {
     let isMounted = true;
     async function fetchFromSheet() {
       try {
-        const res = await fetch("/api/pricing", { cache: "no-store" });
-        if (!res.ok) return;
+        const cacheBuster = `t=${Date.now()}`;
+        const res = await fetch(`/api/pricing?${cacheBuster}`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
+
+        if (!res.ok) {
+          console.warn(`[Pricing] Route returned status ${res.status}`);
+          return;
+        }
+
         const data = await res.json();
+
         if (data?.plans && isMounted) {
+          console.log(
+            "[Pricing] Live data loaded from sheets successfully:",
+            data.plans,
+          );
           setLivePlans(data.plans);
+        } else {
+          console.warn(
+            "[Pricing] Unexpected payload structure from /api/pricing:",
+            data,
+          );
         }
       } catch (err) {
-        console.error("Live pricing fetch error:", err);
+        console.error("[Pricing] Live pricing fetch error:", err);
       }
     }
+
     fetchFromSheet();
     return () => {
       isMounted = false;
@@ -242,6 +269,7 @@ export default function PricingSection({ plans, lang = "ar" }) {
       ? plans
       : PRICING_PLANS[lang] || PRICING_PLANS.ar);
 
+  // تفکیک پلن‌های آنلاین و پلن حضوری باشگاه
   const onlinePlans = rawPlans.filter(
     (p) => p.id !== "in_gym_vip" && p.id !== "nutrition_only",
   );

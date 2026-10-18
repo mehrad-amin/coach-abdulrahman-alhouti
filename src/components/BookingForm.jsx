@@ -20,6 +20,19 @@ import {
 } from "lucide-react";
 import { PRICING_PLANS } from "@/constants/fitnessData";
 
+// لیست کشورهای عربی و پیش‌شماره‌ها با پیش‌فرض کویت
+const ARAB_COUNTRIES = [
+  { code: "+965", flag: "🇰🇼", nameAr: "الكويت", nameEn: "Kuwait" },
+  { code: "+966", flag: "🇸🇦", nameAr: "السعودية", nameEn: "Saudi Arabia" },
+  { code: "+971", flag: "🇦🇪", nameAr: "الإمارات", nameEn: "UAE" },
+  { code: "+974", flag: "🇶🇦", nameAr: "قطر", nameEn: "Qatar" },
+  { code: "+973", flag: "🇧🇭", nameAr: "البحرين", nameEn: "Bahrain" },
+  { code: "+968", flag: "🇴🇲", nameAr: "عُمان", nameEn: "Oman" },
+  { code: "+20", flag: "🇪🇬", nameAr: "مصر", nameEn: "Egypt" },
+  { code: "+962", flag: "🇯🇴", nameAr: "الأردن", nameEn: "Jordan" },
+  { code: "+964", flag: "🇮🇶", nameAr: "العراق", nameEn: "Iraq" },
+];
+
 const BOOKING_UI_TEXT = {
   ar: {
     sectionBadge: "الخطوة النهائية نحو أهدافك",
@@ -42,12 +55,12 @@ const BOOKING_UI_TEXT = {
     nameLabel: "الاسم الكامل",
     namePlaceholder: "مثال: عبدالمحسن المطيري",
     phoneLabel: "رقم الواتساب (للتواصل المباشر واستلام الخطة)",
-    phonePlaceholder: "+965 99xx xxxx",
+    phonePlaceholder: "6222 2832",
     goalLabel: "الهدف الأساسي من الاشتراك",
     experienceLabel: "الخبرة في تمارين المقاومة والحديد",
-    notesLabel: "ملاحظات إضافية أو إصابات سابقة (اختياري)",
+    notesLabel: "الحالة الصحية، الإصابات، أو ملخص الفحوصات (اختياري)",
     notesPlaceholder:
-      "أي إصابات سابقة، حساسيات غذائية، أو تفاصيل تفضل مشاركتها مع الكابتن...",
+      "اذكر أي إصابات مسبقة (ديسك، آلام مفاصل)، أمراض مزمنة، أو أبرز نتائج تحاليل الدم الأخيرة ليتم مراعاتها بدقة في جدولك...",
 
     submitLoading: "جاري ربط الملف وإرسال البيانات للأنظمة الفسيولوجية...",
     submitPrefix: "تأكيد حجز",
@@ -56,7 +69,7 @@ const BOOKING_UI_TEXT = {
     unexpectedError: "تعذر الاتصال بالخادم، يرجى إعادة المحاولة.",
 
     success: {
-      title: "تم استلام ملفك الرياضي بنجاح! ",
+      title: "تم استلام ملفك الرياضي بنجاح!",
       confirmed: "الباقة المعتمدة:",
       desc: "تم تسجيل كافة بياناتك الحيوية وأولويات فحصك الحركي في قاعدة بيانات الكابتن عبدالرحمن. يمكنك بدء المحادثة وتأكيد اشتراكك الآن بلمسة واحدة عبر واتساب.",
       whatsappBtn: "فتح محادثة واتساب المباشرة مع الكابتن",
@@ -103,12 +116,12 @@ const BOOKING_UI_TEXT = {
     nameLabel: "Full Name",
     namePlaceholder: "e.g. David Miller",
     phoneLabel: "WhatsApp Phone (For Instant Onboarding)",
-    phonePlaceholder: "+965 99xx xxxx",
+    phonePlaceholder: "6222 2832",
     goalLabel: "Primary Objective",
     experienceLabel: "Resistance Training Experience",
-    notesLabel: "Additional Notes or Injuries (Optional)",
+    notesLabel: "Medical History, Injuries, or Lab Notes (Optional)",
     notesPlaceholder:
-      "Any past injuries, dietary constraints, or notes for Coach...",
+      "Mention any past injuries, chronic conditions, or key highlights from your recent lab tests...",
 
     submitLoading: "Encrypting file & synchronizing systems...",
     submitPrefix: "Confirm Enrollment in",
@@ -153,7 +166,10 @@ export default function BookingForm({ lang = "ar" }) {
   const ui = BOOKING_UI_TEXT[lang] || BOOKING_UI_TEXT.ar;
   const availablePlans = PRICING_PLANS[lang] || PRICING_PLANS.ar;
 
-  // ۱. استیت فرم پایه
+  // ۱. استیت پیش‌شماره کشور (پیش‌فرض کویت)
+  const [countryCode, setCountryCode] = useState("+965");
+
+  // ۲. استیت فرم پایه
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -163,7 +179,7 @@ export default function BookingForm({ lang = "ar" }) {
     notes: "",
   });
 
-  // ۲. استیت‌های ذخیره‌شده از سکشن‌های دیگر
+  // ۳. استیت‌های ذخیره‌شده از سکشن‌های دیگر
   const [calcData, setCalcData] = useState(null);
   const [biomechanicsData, setBiomechanicsData] = useState(null);
   const [selectedPlanMeta, setSelectedPlanMeta] = useState(null);
@@ -296,7 +312,7 @@ export default function BookingForm({ lang = "ar" }) {
       } catch (_) {}
     }
 
-    // ۳. دریافت پلن و قیمت دقیق انتخابی با رفع باگ ReferenceError
+    // ۳. دریافت پلن و قیمت دقیق انتخابی
     let currentStoredPlan = selectedPlanMeta;
     if (!currentStoredPlan) {
       try {
@@ -316,13 +332,17 @@ export default function BookingForm({ lang = "ar" }) {
       ui.experienceLevels.find((exp) => exp.id === formData.experience)
         ?.label || formData.experience;
 
+    // تمیز کردن شماره: حذف صفر احتمالی ابتدای شماره و الحاق پیش‌شماره کشور
+    const cleanLocalPhone = formData.phone.trim().replace(/^0+/, "");
+    const fullPhoneNumber = `${countryCode}${cleanLocalPhone}`;
+
     try {
       const res = await fetch("/api/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          phone: formData.phone,
+          phone: fullPhoneNumber,
           selectedPlan: finalPlanTitle,
           planPrice: finalPlanPrice,
           planDuration: finalPlanDuration,
@@ -360,7 +380,7 @@ export default function BookingForm({ lang = "ar" }) {
   // کارت وضعیت موفقیت آمیز با دکمه اتصال مستقیم به واتس‌اپ مربی
   // =========================================================================
   if (status.success) {
-    const cleanPhone = resultMeta.coachPhone
+    const cleanCoachPhone = resultMeta.coachPhone
       .replace(/\+/g, "")
       .replace(/\s/g, "");
 
@@ -390,13 +410,12 @@ export default function BookingForm({ lang = "ar" }) {
 
     const waMessage = `${ui.success.waHello}\n${ui.success.waIm} *${formData.name}*، ${ui.success.waRegistered}\n📌 *${currentPlan.title}* (${currentPlan.duration})\n📋 ${ui.success.fileIdLabel} \`\`\`${resultMeta.fileId}\`\`\`\n\n${ui.success.waBiometricsHeader}${weightText}${calText}${bioText}\n\n${ui.success.waReady}`;
 
-    const waLink = cleanPhone
-      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMessage)}`
+    const waLink = cleanCoachPhone
+      ? `https://wa.me/${cleanCoachPhone}?text=${encodeURIComponent(waMessage)}`
       : `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
     return (
       <div className="relative overflow-hidden rounded-[2.5rem] border border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-950 to-black p-8 text-center shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_50px_rgba(0,210,255,0.12)] md:p-12">
-        {/* آیکون تایید با پس‌زمینه مشکی زینک و آیکون آبی */}
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-fitness-primary/40 bg-zinc-900 text-fitness-primary shadow-[0_0_25px_rgba(0,210,255,0.25)]">
           <Check className="h-8 w-8 stroke-[3]" />
         </div>
@@ -418,7 +437,6 @@ export default function BookingForm({ lang = "ar" }) {
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {/* دکمه اتصال به واتس‌اپ: گرادیانت سبز تبدیل به گرادیانت آبی شد */}
           <a
             href={waLink}
             target="_blank"
@@ -429,7 +447,6 @@ export default function BookingForm({ lang = "ar" }) {
             <ExternalLink className="h-4 w-4" />
           </a>
 
-          {/* دکمه بازگشت: کاملاً مشکی/خاکستری و دست‌نخورده مطابق ظاهر فرم */}
           <button
             type="button"
             onClick={() => {
@@ -454,6 +471,7 @@ export default function BookingForm({ lang = "ar" }) {
       </div>
     );
   }
+
   const hasAnyBadge = Boolean(biomechanicsData || calcData || selectedPlanMeta);
 
   return (
@@ -512,7 +530,6 @@ export default function BookingForm({ lang = "ar" }) {
                       : biomechanicsData.nameEn || biomechanicsData.name}
                   </h4>
 
-                  {/* خلاصه بررسی یا توصیف کلی متناسب با زبان */}
                   <p className="mt-1 line-clamp-2 text-[10px] text-zinc-400">
                     {isRtl
                       ? biomechanicsData.overviewAr ||
@@ -524,7 +541,6 @@ export default function BookingForm({ lang = "ar" }) {
                   </p>
                 </div>
 
-                {/* نمایش شکیل تگ اولویت بدون علامت منفی قبلی */}
                 <div className="mt-3 flex items-center justify-between border-t border-zinc-800/80 pt-2 text-[10px]">
                   <span className="text-zinc-500">
                     {ui.screeningFocusLabel}
@@ -687,7 +703,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۲. نام و شماره واتس‌اپ */}
+        {/* ۲. نام و شماره واتس‌اپ همراه با سلکتور کشور */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
@@ -717,7 +733,31 @@ export default function BookingForm({ lang = "ar" }) {
             >
               {ui.phoneLabel} <span className="text-fitness-primary">*</span>
             </label>
-            <div className="relative">
+            <div className="relative flex rounded-2xl border border-zinc-800 bg-zinc-950/80 transition-all focus-within:border-fitness-primary focus-within:ring-1 focus-within:ring-fitness-primary">
+              {/* دراپ‌داون پیش‌شماره کشورهای عربی */}
+              <div className="relative flex items-center border-e border-zinc-800 bg-zinc-900/60 rounded-s-2xl px-2.5">
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="cursor-pointer appearance-none bg-transparent pe-5 text-xs font-mono font-bold text-white outline-none"
+                  dir="ltr"
+                >
+                  {ARAB_COUNTRIES.map((c) => (
+                    <option
+                      key={c.code}
+                      value={c.code}
+                      className="bg-zinc-900 text-white"
+                    >
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute end-2 text-[10px] text-zinc-500">
+                  ▼
+                </span>
+              </div>
+
+              {/* اینپوت شماره تلفن کاربر */}
               <input
                 id="booking-phone"
                 type="tel"
@@ -727,9 +767,7 @@ export default function BookingForm({ lang = "ar" }) {
                 value={formData.phone}
                 onChange={handleInputChange}
                 placeholder={ui.phonePlaceholder}
-                className={`w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 font-mono text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary ${
-                  isRtl ? "text-end" : "text-start"
-                }`}
+                className="w-full bg-transparent p-3.5 font-mono text-sm text-white placeholder-zinc-600 outline-none"
               />
             </div>
           </div>
@@ -788,7 +826,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۴. یادداشت‌ها و توضیحات تکمیلی */}
+        {/* ۴. وضعیت سلامت، آسیب‌دیدگی‌ها و خلاصه آزمایش‌ها */}
         <div>
           <label
             htmlFor="booking-notes"
@@ -798,7 +836,7 @@ export default function BookingForm({ lang = "ar" }) {
           </label>
           <textarea
             id="booking-notes"
-            rows="3"
+            rows="4"
             name="notes"
             value={formData.notes}
             onChange={handleInputChange}

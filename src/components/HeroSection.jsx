@@ -314,8 +314,6 @@ function AnimatedCounter({ value }) {
 
 export default function HeroSection({ lang = "ar" }) {
   const content = HERO_CONTENT[lang] || HERO_CONTENT.ar;
-  const coachImages = COACH_CREDENTIALS?.images || {};
-  const [imageError, setImageError] = useState(false);
 
   return (
     <section className="relative min-h-[85vh] w-full overflow-hidden border-b border-zinc-800 bg-[#0c1012] flex items-center justify-center py-10">
@@ -328,28 +326,6 @@ export default function HeroSection({ lang = "ar" }) {
       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-80 w-80 rounded-full bg-fitness-primary/10 blur-[100px]" />
 
       <div className="relative z-20 mx-auto w-full max-w-4xl px-4 sm:px-6 py-8 text-center">
-        {/* قاب عکس رسمی مربی با next/image */}
-        <div className="mx-auto mb-5 flex justify-center">
-          <div className="group relative h-22 w-22 sm:h-30 sm:w-30 overflow-hidden rounded-2xl border-2 border-fitness-primary/60 bg-zinc-950 shadow-[0_0_25px_rgba(34,197,94,0.25)] transition-transform duration-300 hover:scale-105">
-            {!imageError ? (
-              <Image
-                src={coachImages.formal || "/images/coach/formal.jpg"}
-                alt="Capt. Abdulrahman Al-Houti"
-                fill
-                sizes="(max-width: 640px) 88px, 120px"
-                priority
-                onError={() => setImageError(true)}
-                className="object-cover object-top transition-transform duration-500 group-hover:scale-110"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-zinc-900 text-xs font-bold text-fitness-primary">
-                الحوطي
-              </div>
-            )}
-            <div className="absolute inset-0 bg-linear-to-t from-[#0c1012]/80 via-transparent to-transparent pointer-events-none" />
-          </div>
-        </div>
-
         {/* بج تخصصی */}
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-fitness-primary/50 bg-black/75 px-3 py-1 shadow-[0_0_20px_rgba(34,197,94,0.2)] backdrop-blur-md">
           <span className="relative flex h-2 w-2">
