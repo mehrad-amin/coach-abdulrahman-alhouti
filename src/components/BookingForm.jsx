@@ -11,6 +11,7 @@ import {
   X,
   User,
   Phone,
+  Mail,
   Target,
   Dumbbell,
   FileText,
@@ -42,7 +43,6 @@ const BOOKING_UI_TEXT = {
     sectionSubtitle:
       "تم ربط جميع بياناتك الحيوية وأولويات فحصك الحركي تلقائياً بهذه الاستمارة لتصل للكابتن عبدالرحمن كاملة بدقة.",
 
-    // بج‌های بالای فرم
     badgesContainerTitle: "البيانات المسجلة تلقائياً من جولتك في الموقع:",
     badgeBiomechanicsTitle: "فحص السلسلة الحركية والمفاصل",
     badgeCalculatorTitle: "التحليل الأيضي والهدف البدني",
@@ -52,10 +52,11 @@ const BOOKING_UI_TEXT = {
     forecastLabel: "الهدف بعد 12 أسبوعاً:",
     dismissBadge: "إلغاء الإرفاق",
 
-    // بخش‌های فرم
     planSectionTitle: "تأكيد الباقة التدريبية",
     nameLabel: "الاسم الكامل",
     namePlaceholder: "مثال: عبدالمحسن المطيري",
+    emailLabel: "البريد الإلكتروني (يُفضّل Gmail)",
+    emailPlaceholder: "example@gmail.com",
     phoneLabel: "رقم الواتساب (للتواصل المباشر واستلام الخطة)",
     phonePlaceholder: "6222 2832",
     goalLabel: "الهدف الأساسي من الاشتراك",
@@ -129,6 +130,8 @@ const BOOKING_UI_TEXT = {
     planSectionTitle: "Confirm Coaching Plan",
     nameLabel: "Full Name",
     namePlaceholder: "e.g. David Miller",
+    emailLabel: "Email Address (Preferably Gmail)",
+    emailPlaceholder: "example@gmail.com",
     phoneLabel: "WhatsApp Phone (For Instant Onboarding)",
     phonePlaceholder: "6222 2832",
     goalLabel: "Primary Objective",
@@ -192,12 +195,11 @@ export default function BookingForm({ lang = "ar" }) {
   const ui = BOOKING_UI_TEXT[lang] || BOOKING_UI_TEXT.ar;
   const availablePlans = PRICING_PLANS[lang] || PRICING_PLANS.ar;
 
-  // ۱. پیش‌شماره کشور (پیش‌فرض کویت)
   const [countryCode, setCountryCode] = useState("+965");
 
-  // ۲. استیت فرم پایه
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
     phone: "",
     selectedPlanId: availablePlans[1]?.id || "pro",
     goal: "cut",
@@ -206,7 +208,6 @@ export default function BookingForm({ lang = "ar" }) {
     notes: "",
   });
 
-  // ۳. استیت‌های ذخیره‌شده از سکشن‌های دیگر
   const [calcData, setCalcData] = useState(null);
   const [biomechanicsData, setBiomechanicsData] = useState(null);
   const [selectedPlanMeta, setSelectedPlanMeta] = useState(null);
@@ -251,7 +252,11 @@ export default function BookingForm({ lang = "ar" }) {
     };
 
     const handleBioUpdate = (e) => {
-      if (e?.detail) setBiomechanicsData(e.detail);
+      if (e?.detail) {
+        setBiomechanicsData(e.detail);
+      } else {
+        setBiomechanicsData(null);
+      }
     };
 
     const handlePlanSelect = (e) => {
@@ -318,7 +323,6 @@ export default function BookingForm({ lang = "ar" }) {
     }
   };
 
-  // سابمیت فرم
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({
@@ -328,7 +332,6 @@ export default function BookingForm({ lang = "ar" }) {
       isCalcMissing: false,
     });
 
-    // ۱. بررسی داده‌های ماشین‌حساب
     let currentStats = calcData;
     if (!currentStats) {
       try {
@@ -339,7 +342,6 @@ export default function BookingForm({ lang = "ar" }) {
       }
     }
 
-    // اگر ماشین حساب خالی بود: تنها نمایش پیام هشدار در همین بخش بدون اسکرول خودکار
     if (!currentStats || !currentStats.result || !currentStats.weight) {
       setStatus({
         loading: false,
@@ -350,7 +352,6 @@ export default function BookingForm({ lang = "ar" }) {
       return;
     }
 
-    // ۲. دریافت دیتای بیومکانیک
     let currentBio = biomechanicsData;
     if (!currentBio) {
       try {
@@ -359,7 +360,6 @@ export default function BookingForm({ lang = "ar" }) {
       } catch (_) {}
     }
 
-    // ۳. متادیتا پلن انتخابی
     let currentStoredPlan = selectedPlanMeta;
     if (!currentStoredPlan) {
       try {
@@ -388,6 +388,7 @@ export default function BookingForm({ lang = "ar" }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
+          email: formData.email,
           phone: fullPhoneNumber,
           selectedPlan: finalPlanTitle,
           planPrice: finalPlanPrice,
@@ -429,7 +430,6 @@ export default function BookingForm({ lang = "ar" }) {
     }
   };
 
-  // کارت موفقیت
   if (status.success) {
     const cleanCoachPhone = resultMeta.coachPhone
       .replace(/\+/g, "")
@@ -507,6 +507,7 @@ export default function BookingForm({ lang = "ar" }) {
             onClick={() => {
               setFormData({
                 name: "",
+                email: "",
                 phone: "",
                 selectedPlanId: availablePlans[1]?.id || "pro",
                 goal: "cut",
@@ -542,7 +543,6 @@ export default function BookingForm({ lang = "ar" }) {
     >
       <div className="pointer-events-none absolute -top-24 -start-24 h-72 w-72 rounded-full bg-fitness-primary/10 blur-[120px]" />
 
-      {/* سربرگ فرم */}
       <div className="mb-8 border-b border-zinc-800/80 pb-6 text-start">
         <span className="inline-block rounded-full border border-fitness-primary/30 bg-fitness-primary/10 px-3 py-1 font-mono text-[11px] font-bold text-fitness-primary">
           {ui.sectionBadge}
@@ -555,7 +555,6 @@ export default function BookingForm({ lang = "ar" }) {
         </p>
       </div>
 
-      {/* بخش بج‌های زنده */}
       {hasAnyBadge && (
         <div className="mb-8 space-y-3 rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black p-4 sm:p-5 shadow-[0_0_30px_rgba(0,210,255,0.08)]">
           <div className="flex items-center gap-2 text-xs font-bold text-fitness-primary">
@@ -564,7 +563,6 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            {/* ۱. بج فحص بیومکانیک */}
             {biomechanicsData && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -617,7 +615,6 @@ export default function BookingForm({ lang = "ar" }) {
               </div>
             )}
 
-            {/* ۲. بج ماشین‌حساب */}
             {calcData && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -662,7 +659,6 @@ export default function BookingForm({ lang = "ar" }) {
               </div>
             )}
 
-            {/* ۳. بج پلن قیمتی */}
             {selectedPlanMeta && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -760,26 +756,50 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۲. نام و شماره تلفن همراه با پیش‌شماره */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label
-              htmlFor="booking-name"
-              className="mb-2 block text-xs font-medium text-zinc-300"
-            >
-              {ui.nameLabel} <span className="text-fitness-primary">*</span>
-            </label>
-            <div className="relative">
-              <input
-                id="booking-name"
-                type="text"
-                name="name"
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder={ui.namePlaceholder}
-                className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary"
-              />
+        {/* ۲. مشخصات فردی و تماس: نام، ایمیل و تلفن واتس‌اپ */}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="booking-name"
+                className="mb-2 block text-xs font-medium text-zinc-300"
+              >
+                {ui.nameLabel} <span className="text-fitness-primary">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="booking-name"
+                  type="text"
+                  name="name"
+                  required
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder={ui.namePlaceholder}
+                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="booking-email"
+                className="mb-2 block text-xs font-medium text-zinc-300"
+              >
+                {ui.emailLabel} <span className="text-fitness-primary">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  id="booking-email"
+                  type="email"
+                  name="email"
+                  required
+                  dir="ltr"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder={ui.emailPlaceholder}
+                  className="w-full rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3.5 text-sm text-white placeholder-zinc-600 outline-none transition-all focus:border-fitness-primary focus:ring-1 focus:ring-fitness-primary font-mono text-start"
+                />
+              </div>
             </div>
           </div>
 
@@ -921,7 +941,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۵. وضعیت سلامت و آسیب‌دیدگی‌ها */}
+        {/* ۵. وضعیت سلامت و یادداشت‌ها */}
         <div>
           <label
             htmlFor="booking-notes"
@@ -940,7 +960,7 @@ export default function BookingForm({ lang = "ar" }) {
           />
         </div>
 
-        {/* کادر هشدار و خطای تکمیل ماشین‌حساب (بدون اسکرول ناگهانی) */}
+        {/* کادر هشدار و خطا */}
         {status.error && (
           <div
             className={`rounded-2xl border p-4 text-xs transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
@@ -967,7 +987,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         )}
 
-        {/* دکمه سابمیت */}
+        {/* دکمه ارسال */}
         <button
           type="submit"
           disabled={status.loading}

@@ -19,6 +19,7 @@ export async function POST(req) {
 
     const {
       name,
+      email,
       phone,
       goal,
       experience,
@@ -32,20 +33,20 @@ export async function POST(req) {
 
     const isEn = locale === "en";
 
-    // ۱. اعتبارسنجی نام و شماره تماس
-    if (!name || !phone) {
+    // ۱. اعتبارسنجی اطلاعات تماس پایه
+    if (!name || !phone || !email) {
       return NextResponse.json(
         {
           success: false,
           error: isEn
-            ? "Full name and WhatsApp phone number are required."
-            : "الاسم ورقم الهاتف مطلوبان لإتمام الحجز.",
+            ? "Full name, email address, and WhatsApp phone number are required."
+            : "الاسم والبريد الإلكتروني ورقم الهاتف مطلوبان لإتمام الحجز.",
         },
         { status: 400 },
       );
     }
 
-    // ۲. اعتبارسنجی اجباری بودن اطلاعات ماشین‌حساب تعاملی
+    // ۲. اعتبارسنجی اجباری بودن ماشین‌حساب
     const calcStats = body.calculatedStats;
     if (!calcStats || !calcStats.weight || !calcStats.result) {
       return NextResponse.json(
@@ -61,7 +62,7 @@ export async function POST(req) {
 
     const fileId = generateFileId();
 
-    // ۳. فرمت‌بندی فیلد جدید روزهای تمرین
+    // ۳. فرمت‌بندی روزهای تمرین
     const formattedTrainingDays = trainingDays
       ? `${trainingDays} ${isEn ? "Days / Week" : "أيام أسبوعياً"}`
       : isEn
@@ -88,10 +89,8 @@ export async function POST(req) {
       }
     }
 
-    // ۵. اطلاعات فحص بیومکانیک (آناتومی سه‌بعدی)
-    // فقط بر اساس چیزی که مستقیماً از فرانت فرستاده شده
+    // ۵. اطلاعات فحص بیومکانیک (بدون کوکی سرور)
     const bioData = body.biomechanics;
-
     const bioZone = bioData
       ? (isEn
           ? bioData?.nameEn || bioData?.name
@@ -104,6 +103,7 @@ export async function POST(req) {
         bioData?.riskReduction ||
         "-"
       : "-";
+
     // ۶. اطلاعات بیومتریک و محاسبات کالری
     const weight = calcStats.weight || "-";
     const height = calcStats.height || "-";
@@ -162,7 +162,6 @@ export async function POST(req) {
 
     const cleanUserPhone = phone ? phone.replace(/[^0-9]/g, "") : "";
 
-    // ۷. ارسال به Google Apps Script
     if (!GOOGLE_SHEETS_URL) {
       throw new Error("GOOGLE_SHEETS_BOOKING_URL is missing in .env.local");
     }
@@ -170,6 +169,7 @@ export async function POST(req) {
     const sheetPayload = {
       fileId,
       name,
+      email: email.trim(),
       phone: cleanUserPhone || phone,
       plan: finalTitle,
       planPrice: finalPrice || "-",
