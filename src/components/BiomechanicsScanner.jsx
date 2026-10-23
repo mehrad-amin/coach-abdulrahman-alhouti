@@ -1,7 +1,13 @@
 // src/components/BiomechanicsScanner.jsx
 "use client";
 
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
+} from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -258,7 +264,7 @@ export const CLINICAL_ZONES = {
     overviewEn:
       "Screening core bracing and diaphragmatic control. True core strength is your spine's shield and foundation for confident lifting.",
     focusAreasAr: [
-      "القدرة على شد عضلات البطن العميقة والتنفس بثبات تحت الأحمال",
+      "القدرة على شد عضلات البطن العمیقة والتنفس بثبات تحت الأحمال",
       "توازن القوة بين عضلات البطن الأمامية وعضلات أسفل الظهر",
       "مراعاة العمليات الجراحية السابقة أو فترات الانقطاع الطويلة عن التمرين",
     ],
@@ -431,11 +437,26 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
     zoneId: "knee",
   });
 
+  // چک کردن سشن استوریج در لود اولیه بدون ست کردن مقدار پیش‌فرض
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("user_biomechanics_audit");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.zoneId && CLINICAL_ZONES[parsed.zoneId]) {
+          setSelectedZoneId(parsed.zoneId);
+          setIsAttachedToDock(true);
+        }
+      }
+    } catch (_) {}
+  }, []);
+
   const activeZone = useMemo(
     () => CLINICAL_ZONES[selectedZoneId] || CLINICAL_ZONES.knee,
     [selectedZoneId],
   );
 
+  // تابع سینک دیتا: کوکی حذف شده تا دیتا در سشن‌های بعدی نشت نکند
   const syncAuditData = useCallback(
     (zone) => {
       if (typeof window === "undefined" || !zone) return;
@@ -449,7 +470,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
         badgeAr: zone.badgeAr,
         badgeEn: zone.badgeEn,
         screeningFocus: lang === "ar" ? zone.badgeAr : zone.badgeEn,
-        riskReduction: lang === "ar" ? zone.badgeAr : zone.badgeEn, // Keeps backward compatibility with form handlers
+        riskReduction: lang === "ar" ? zone.badgeAr : zone.badgeEn,
         overviewAr: zone.overviewAr,
         overviewEn: zone.overviewEn,
         overview: lang === "ar" ? zone.overviewAr : zone.overviewEn,
@@ -481,8 +502,8 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
           JSON.stringify(auditPayload),
         );
 
-        const encodedCookie = encodeURIComponent(JSON.stringify(auditPayload));
-        document.cookie = `user_biomechanics_audit=${encodedCookie}; path=/; max-age=604800; SameSite=Lax`;
+        // پاکسازی کامل کوکی‌های قدیمی
+        document.cookie = "user_biomechanics_audit=; path=/; max-age=0";
 
         window.dispatchEvent(
           new CustomEvent("biomechanics_audit_updated", {
@@ -496,6 +517,19 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
     [lang],
   );
 
+  // تابع حذف کامل پیوست
+  const removeAuditData = useCallback(() => {
+    try {
+      sessionStorage.removeItem("user_biomechanics_audit");
+      document.cookie = "user_biomechanics_audit=; path=/; max-age=0";
+      window.dispatchEvent(
+        new CustomEvent("biomechanics_audit_updated", { detail: null }),
+      );
+    } catch (e) {
+      console.error("Storage error:", e);
+    }
+  }, []);
+
   const triggerFeedback = useCallback(() => {
     setJustUpdated(true);
     setTimeout(() => setJustUpdated(false), 2400);
@@ -506,7 +540,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
       setActiveHit(hit);
       setSelectedZoneId(hit.zoneId);
       setTargetViewSide(null);
-      setIsAttachedToDock(false);
+      setIsAttachedToDock(true);
       const zone = CLINICAL_ZONES[hit.zoneId] || CLINICAL_ZONES.knee;
       syncAuditData(zone);
       triggerFeedback();
@@ -526,17 +560,23 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
         zoneId,
       });
       setTargetViewSide(zone.viewSide);
-      setIsAttachedToDock(false);
+      setIsAttachedToDock(true);
       syncAuditData(zone);
       triggerFeedback();
     },
     [syncAuditData, triggerFeedback],
   );
 
+  // با کلیک مجدد دکمه، در صورت پیوست بودن، لغو می‌شود
   const handleConfirmZone = () => {
-    syncAuditData(activeZone);
-    setIsAttachedToDock(true);
-    triggerFeedback();
+    if (isAttachedToDock) {
+      removeAuditData();
+      setIsAttachedToDock(false);
+    } else {
+      syncAuditData(activeZone);
+      setIsAttachedToDock(true);
+      triggerFeedback();
+    }
   };
 
   const scrollToResultsMobile = () => {
@@ -561,7 +601,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
       <div className="pointer-events-none absolute top-1/3 left-1/2 -z-10 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fitness-primary/10 blur-[150px]" />
 
       <div className="max-w-6xl mx-auto">
-        {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-fitness-primary/10 text-fitness-primary text-xs font-black tracking-wide mb-3 border border-fitness-primary/30 shadow-[0_0_15px_rgba(34,197,94,0.15)]">
             <Activity className="w-4 h-4 text-fitness-primary animate-pulse" />
@@ -586,7 +625,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Column 1: 3D Canvas & Quick Presets */}
           <div className="lg:col-span-5 bg-zinc-950/90 border border-zinc-800 rounded-3xl p-3 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative">
             <AnimatePresence>
               {justUpdated && (
@@ -642,10 +680,10 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                 </button>
               </div>
 
-              {/* 3x3 Grid of Joints */}
               <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {Object.values(CLINICAL_ZONES).map((z) => {
-                  const isSelected = selectedZoneId === z.id;
+                  const isSelected =
+                    selectedZoneId === z.id && isAttachedToDock;
                   return (
                     <button
                       key={z.id}
@@ -665,7 +703,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
             </div>
           </div>
 
-          {/* Column 2: Kinetic Chain Assessment Panel */}
           <div
             ref={resultCardRef}
             className="lg:col-span-7 space-y-4 sm:space-y-5"
@@ -679,7 +716,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 className="bg-zinc-950/90 border border-zinc-800 rounded-3xl p-5 sm:p-7 lg:p-8 shadow-2xl backdrop-blur-xl space-y-4 sm:space-y-6"
               >
-                {/* Header row */}
                 <div className="flex flex-wrap items-start justify-between gap-2.5 pb-3 sm:pb-4 border-b border-zinc-800/80">
                   <div>
                     <span className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-fitness-primary font-mono">
@@ -704,14 +740,12 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                   </div>
                 </div>
 
-                {/* Objective Reassurance Card */}
                 <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800 space-y-2">
                   <p className="text-xs sm:text-sm text-zinc-300 font-medium leading-relaxed">
                     {isRtl ? activeZone.overviewAr : activeZone.overviewEn}
                   </p>
                 </div>
 
-                {/* Scope of Evaluation Checklist */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/90 space-y-3">
                   <div className="flex items-center gap-2 text-fitness-primary">
                     <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-fitness-primary shrink-0" />
@@ -738,7 +772,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                   </ul>
                 </div>
 
-                {/* Methodology Breakdown (In-Person, Online, Medical) */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/80 border border-zinc-800/90 space-y-3">
                   <div className="flex items-center gap-2 text-white">
                     <UserCheck className="w-4 h-4 text-fitness-primary shrink-0" />
@@ -796,7 +829,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                   </div>
                 </div>
 
-                {/* Tailored Programming Philosophy (Zero rigid prescription) */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black border border-fitness-primary/30 text-white space-y-3 shadow-[inset_0_0_30px_rgba(0,210,255,0.08)]">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs sm:text-sm font-bold text-fitness-primary flex items-center gap-1.5">
@@ -808,7 +840,6 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                       </span>
                     </span>
 
-                    {/* بج کاملاً ترجمه‌شده و مقاوم در برابر شکست متن در موبایل */}
                     <span className="text-[10px] sm:text-[11px] bg-fitness-primary/10 border border-fitness-primary/30 px-2.5 py-1 rounded-lg font-mono text-fitness-primary font-bold whitespace-nowrap shrink-0">
                       {isRtl ? "بروتوكول مخصص بالكامل" : "Bespoke Protocol"}
                     </span>
@@ -819,7 +850,7 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                   </p>
                 </div>
 
-                {/* Pinned Button */}
+                {/* دکمه الصاق / لغو الصاق */}
                 <button
                   type="button"
                   onClick={handleConfirmZone}
@@ -834,8 +865,8 @@ export default function BiomechanicsScanner({ lang = "ar" }) {
                       <Check className="h-4 w-4 stroke-[3] text-fitness-bg" />
                       <span>
                         {isRtl
-                          ? `تم تثبيت مراجعة (${shortZoneTitle}) في ملفك بنجاح ✓`
-                          : `(${shortZoneTitle}) Priority Pinned to File ✓`}
+                          ? `تم تثبيت مراجعة (${shortZoneTitle}) في ملفك (انقر للإلغاء) ✓`
+                          : `(${shortZoneTitle}) Priority Pinned (Click to Unpin) ✓`}
                       </span>
                     </>
                   ) : (

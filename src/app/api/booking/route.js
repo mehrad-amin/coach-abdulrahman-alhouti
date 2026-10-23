@@ -22,6 +22,7 @@ export async function POST(req) {
       phone,
       goal,
       experience,
+      trainingDays,
       notes,
       selectedPlan,
       planPrice,
@@ -29,17 +30,45 @@ export async function POST(req) {
       locale = "ar",
     } = body;
 
+    const isEn = locale === "en";
+
+    // ۱. اعتبارسنجی نام و شماره تماس
     if (!name || !phone) {
       return NextResponse.json(
-        { success: false, error: "الاسم ورقم الهاتف مطلوبان لإتمام الحجز." },
+        {
+          success: false,
+          error: isEn
+            ? "Full name and WhatsApp phone number are required."
+            : "الاسم ورقم الهاتف مطلوبان لإتمام الحجز.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ۲. اعتبارسنجی اجباری بودن اطلاعات ماشین‌حساب تعاملی
+    const calcStats = body.calculatedStats;
+    if (!calcStats || !calcStats.weight || !calcStats.result) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: isEn
+            ? "Biometric calculator data (weight, height, and goal) is mandatory to generate your plan."
+            : "بيانات الحاسبة البدنية (الوزن، الطول، والهدف الأيضي) إلزامية لتحديد خطتك التدريبية بدقة.",
+        },
         { status: 400 },
       );
     }
 
     const fileId = generateFileId();
-    const isEn = locale === "en";
 
-    // ۱. اطلاعات باقه و قیمت
+    // ۳. فرمت‌بندی فیلد جدید روزهای تمرین
+    const formattedTrainingDays = trainingDays
+      ? `${trainingDays} ${isEn ? "Days / Week" : "أيام أسبوعياً"}`
+      : isEn
+        ? "4 Days / Week"
+        : "٤ أيام أسبوعياً";
+
+    // ۴. اطلاعات باقه و قیمت
     let finalPrice = planPrice || body.selectedPlan?.price;
     let finalDuration = planDuration || body.selectedPlan?.duration;
     let finalTitle =
@@ -59,34 +88,28 @@ export async function POST(req) {
       }
     }
 
-    // ۲. اطلاعات فحص بیومکانیک (آناتومی سه‌بعدی)
-    let bioData = body.biomechanics;
-    if (!bioData) {
-      const cookieBio = cookieStore.get("user_biomechanics_audit");
-      if (cookieBio?.value) {
-        try {
-          bioData = JSON.parse(decodeURIComponent(cookieBio.value));
-        } catch (_) {}
-      }
-    }
+    // ۵. اطلاعات فحص بیومکانیک (آناتومی سه‌بعدی)
+    // فقط بر اساس چیزی که مستقیماً از فرانت فرستاده شده
+    const bioData = body.biomechanics;
 
-    const bioZone = isEn
-      ? bioData?.nameEn || bioData?.name || "None Selected"
-      : bioData?.nameAr || bioData?.name || "سليم (بدون شكوى)";
+    const bioZone = bioData
+      ? (isEn
+          ? bioData?.nameEn || bioData?.name
+          : bioData?.nameAr || bioData?.name) || "-"
+      : "-";
 
-    // اولویت ارزیابی حرکتی
-    const bioPriority =
-      bioData?.priority ||
-      bioData?.riskReduction ||
-      (isEn ? "Standard Assessment" : "تقييم عام");
-
-    // ۳. اطلاعات بیومتریک و محاسبات کالری
-    const calcStats = body.calculatedStats;
-    const weight = calcStats?.weight || "-";
-    const height = calcStats?.height || "-";
-    const age = calcStats?.age || "-";
+    const bioPriority = bioData
+      ? bioData?.priority ||
+        bioData?.screeningFocus ||
+        bioData?.riskReduction ||
+        "-"
+      : "-";
+    // ۶. اطلاعات بیومتریک و محاسبات کالری
+    const weight = calcStats.weight || "-";
+    const height = calcStats.height || "-";
+    const age = calcStats.age || "-";
     const gender =
-      calcStats?.gender === "female"
+      calcStats.gender === "female"
         ? isEn
           ? "Female"
           : "أنثى"
@@ -95,15 +118,15 @@ export async function POST(req) {
           : "ذكر";
 
     const rawCalories =
-      calcStats?.result?.targetCalories ||
-      calcStats?.result?.calories ||
-      calcStats?.result?.tdee ||
+      calcStats.result?.targetCalories ||
+      calcStats.result?.calories ||
+      calcStats.result?.tdee ||
       null;
 
     const targetCaloriesStr = rawCalories ? `${rawCalories} kcal` : "-";
 
-    const estWeight = calcStats?.result?.projection?.estimatedWeight;
-    const delta = calcStats?.result?.projection?.expectedDelta;
+    const estWeight = calcStats.result?.projection?.estimatedWeight;
+    const delta = calcStats.result?.projection?.expectedDelta;
     let target12wStr = "-";
     if (estWeight && estWeight !== "-") {
       target12wStr =
@@ -111,7 +134,7 @@ export async function POST(req) {
     }
 
     const nutritionType =
-      calcStats?.nutrition === "coached"
+      calcStats.nutrition === "coached"
         ? isEn
           ? "Precision Macro Plan"
           : "خطة مخصصة ومحسوبة الغرامات"
@@ -120,7 +143,7 @@ export async function POST(req) {
           : "أكل منزلي عام";
 
     const supplementsType =
-      calcStats?.supplements === "essential"
+      calcStats.supplements === "essential"
         ? isEn
           ? "Performance Stack"
           : "مكملات أساسية (واي + كرياتين)"
@@ -128,7 +151,6 @@ export async function POST(req) {
           ? "Natural Whole Foods Only"
           : "أغذية طبيعية فقط";
 
-    // تفکیک خالص ماکروها بدون کاراکتر اضافه
     const calNumber = Number(rawCalories);
     let macrosStr = "-";
     if (!isNaN(calNumber) && calNumber > 0) {
@@ -140,7 +162,7 @@ export async function POST(req) {
 
     const cleanUserPhone = phone ? phone.replace(/[^0-9]/g, "") : "";
 
-    // ۴. ارسال به Google Apps Script
+    // ۷. ارسال به Google Apps Script
     if (!GOOGLE_SHEETS_URL) {
       throw new Error("GOOGLE_SHEETS_BOOKING_URL is missing in .env.local");
     }
@@ -156,6 +178,7 @@ export async function POST(req) {
         : "-",
       goal: goal || "-",
       experience: experience || "-",
+      trainingDays: formattedTrainingDays,
       notes: notes || "-",
       locale,
       biomechanics: {

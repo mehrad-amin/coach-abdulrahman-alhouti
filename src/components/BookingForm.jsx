@@ -17,6 +17,8 @@ import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
+  Calendar,
+  AlertCircle,
 } from "lucide-react";
 import { PRICING_PLANS } from "@/constants/fitnessData";
 
@@ -58,6 +60,8 @@ const BOOKING_UI_TEXT = {
     phonePlaceholder: "6222 2832",
     goalLabel: "الهدف الأساسي من الاشتراك",
     experienceLabel: "الخبرة في تمارين المقاومة والحديد",
+    trainingDaysLabel: "كم يوماً تفضل التمرين أسبوعياً؟",
+    trainingDaysUnit: "أيام",
     notesLabel: "الحالة الصحية، الإصابات، أو ملخص الفحوصات (اختياري)",
     notesPlaceholder:
       "اذكر أي إصابات مسبقة (ديسك، آلام مفاصل)، أمراض مزمنة، أو أبرز نتائج تحاليل الدم الأخيرة ليتم مراعاتها بدقة في جدولك...",
@@ -67,6 +71,9 @@ const BOOKING_UI_TEXT = {
     submitSuffix: "والبدء مع الكابتن",
     defaultError: "حدث خطأ أثناء معالجة البيانات، يرجى المحاولة لاحقاً.",
     unexpectedError: "تعذر الاتصال بالخادم، يرجى إعادة المحاولة.",
+    calcRequiredError:
+      "يرجى إكمال بيانات الحاسبة البدنية أولاً ليتمكن الكابتن من تحديد خطتك بدقة.",
+    goToCalcBtn: "الانتقال للحاسبة الآن",
 
     success: {
       title: "تم استلام ملفك الرياضي بنجاح!",
@@ -83,6 +90,7 @@ const BOOKING_UI_TEXT = {
       waBioFocus: "أولوية المراجعة:",
       waTargetCal: "السعرات المبرمجة:",
       waWeight: "الوزن الحالي:",
+      waTrainingDays: "أيام التمرين المحددة:",
       waReady: "بانتظار مراجعتك واعتماد برنامجي المخصص للبدء معك إن شاء الله.",
     },
 
@@ -96,6 +104,12 @@ const BOOKING_UI_TEXT = {
       { id: "beginner", label: "مبتدئ (أقل من 6 أشهر)" },
       { id: "intermediate", label: "متوسط (1 إلى 3 سنوات)" },
       { id: "advanced", label: "متقدم (أكثر من 3 سنوات)" },
+    ],
+    trainingDaysOptions: [
+      { id: "3", label: "٣ أيام", sub: "مناسب للمبتدئين" },
+      { id: "4", label: "٤ أيام", sub: "توازن مثالي" },
+      { id: "5", label: "٥ أيام", sub: "كثافة تدريبية" },
+      { id: "6", label: "٦ أيام", sub: "رياضي متقدم" },
     ],
   },
   en: {
@@ -119,6 +133,8 @@ const BOOKING_UI_TEXT = {
     phonePlaceholder: "6222 2832",
     goalLabel: "Primary Objective",
     experienceLabel: "Resistance Training Experience",
+    trainingDaysLabel: "Preferred Workout Days Per Week",
+    trainingDaysUnit: "Days",
     notesLabel: "Medical History, Injuries, or Lab Notes (Optional)",
     notesPlaceholder:
       "Mention any past injuries, chronic conditions, or key highlights from your recent lab tests...",
@@ -128,6 +144,9 @@ const BOOKING_UI_TEXT = {
     submitSuffix: "and Start Now",
     defaultError: "Error submitting your assessment. Please try again.",
     unexpectedError: "Unexpected server error. Please try again.",
+    calcRequiredError:
+      "Please complete the Biometric Calculator above before submitting your registration.",
+    goToCalcBtn: "Go to Calculator",
 
     success: {
       title: "Assessment Successfully Logged!",
@@ -144,6 +163,7 @@ const BOOKING_UI_TEXT = {
       waBioFocus: "Screening Priority:",
       waTargetCal: "Target Intake:",
       waWeight: "Current Weight:",
+      waTrainingDays: "Target Training Days:",
       waReady: "Looking forward to receiving my customized program.",
     },
 
@@ -158,6 +178,12 @@ const BOOKING_UI_TEXT = {
       { id: "intermediate", label: "Intermediate (1–3 years)" },
       { id: "advanced", label: "Advanced (> 3 years)" },
     ],
+    trainingDaysOptions: [
+      { id: "3", label: "3 Days", sub: "Recovery Focused" },
+      { id: "4", label: "4 Days", sub: "Balanced Split" },
+      { id: "5", label: "5 Days", sub: "High Frequency" },
+      { id: "6", label: "6 Days", sub: "Athletic Volume" },
+    ],
   },
 };
 
@@ -166,7 +192,7 @@ export default function BookingForm({ lang = "ar" }) {
   const ui = BOOKING_UI_TEXT[lang] || BOOKING_UI_TEXT.ar;
   const availablePlans = PRICING_PLANS[lang] || PRICING_PLANS.ar;
 
-  // ۱. استیت پیش‌شماره کشور (پیش‌فرض کویت)
+  // ۱. پیش‌شماره کشور (پیش‌فرض کویت)
   const [countryCode, setCountryCode] = useState("+965");
 
   // ۲. استیت فرم پایه
@@ -176,6 +202,7 @@ export default function BookingForm({ lang = "ar" }) {
     selectedPlanId: availablePlans[1]?.id || "pro",
     goal: "cut",
     experience: "beginner",
+    trainingDays: "4",
     notes: "",
   });
 
@@ -188,10 +215,10 @@ export default function BookingForm({ lang = "ar" }) {
     loading: false,
     success: false,
     error: "",
+    isCalcMissing: false,
   });
   const [resultMeta, setResultMeta] = useState({ coachPhone: "", fileId: "" });
 
-  // لود اولیه از sessionStorage و تنظیم لیسنرهای رویداد زنده
   useEffect(() => {
     try {
       const storedCalc = sessionStorage.getItem("user_fitness_data");
@@ -211,10 +238,10 @@ export default function BookingForm({ lang = "ar" }) {
       console.warn("Storage sync error:", e);
     }
 
-    // ۱. لیسنر ماشین‌حساب
     const handleCalcUpdate = (e) => {
       if (e?.detail) {
         setCalcData(e.detail);
+        setStatus((prev) => ({ ...prev, isCalcMissing: false, error: "" }));
         if (e.detail.result?.goalKey) {
           setFormData((prev) => ({ ...prev, goal: e.detail.result.goalKey }));
         }
@@ -223,12 +250,10 @@ export default function BookingForm({ lang = "ar" }) {
       }
     };
 
-    // ۲. لیسنر بیومکانیک و زنجیره حرکتی
     const handleBioUpdate = (e) => {
       if (e?.detail) setBiomechanicsData(e.detail);
     };
 
-    // ۳. لیسنر پلن‌های قیمتی
     const handlePlanSelect = (e) => {
       const plan = e?.detail;
       if (plan) {
@@ -253,7 +278,6 @@ export default function BookingForm({ lang = "ar" }) {
     };
   }, []);
 
-  // هندلرهای حذف اختصاصی هر بج توسط کاربر
   const handleRemoveBiomechanics = useCallback(() => {
     try {
       sessionStorage.removeItem("user_biomechanics_audit");
@@ -287,12 +311,24 @@ export default function BookingForm({ lang = "ar" }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // سابمیت فرم به روت سرور
+  const scrollToCalculator = () => {
+    const calcEl = document.getElementById("calculator");
+    if (calcEl) {
+      calcEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  // سابمیت فرم
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ loading: true, success: false, error: "" });
+    setStatus({
+      loading: true,
+      success: false,
+      error: "",
+      isCalcMissing: false,
+    });
 
-    // ۱. دریافت دیتای ماشین‌حساب
+    // ۱. بررسی داده‌های ماشین‌حساب
     let currentStats = calcData;
     if (!currentStats) {
       try {
@@ -303,7 +339,18 @@ export default function BookingForm({ lang = "ar" }) {
       }
     }
 
-    // ۲. دریافت دیتای آناتومی سه‌بعدی و مفصل
+    // اگر ماشین حساب خالی بود: تنها نمایش پیام هشدار در همین بخش بدون اسکرول خودکار
+    if (!currentStats || !currentStats.result || !currentStats.weight) {
+      setStatus({
+        loading: false,
+        success: false,
+        error: ui.calcRequiredError,
+        isCalcMissing: true,
+      });
+      return;
+    }
+
+    // ۲. دریافت دیتای بیومکانیک
     let currentBio = biomechanicsData;
     if (!currentBio) {
       try {
@@ -312,7 +359,7 @@ export default function BookingForm({ lang = "ar" }) {
       } catch (_) {}
     }
 
-    // ۳. دریافت پلن و قیمت دقیق انتخابی
+    // ۳. متادیتا پلن انتخابی
     let currentStoredPlan = selectedPlanMeta;
     if (!currentStoredPlan) {
       try {
@@ -332,7 +379,6 @@ export default function BookingForm({ lang = "ar" }) {
       ui.experienceLevels.find((exp) => exp.id === formData.experience)
         ?.label || formData.experience;
 
-    // تمیز کردن شماره: حذف صفر احتمالی ابتدای شماره و الحاق پیش‌شماره کشور
     const cleanLocalPhone = formData.phone.trim().replace(/^0+/, "");
     const fullPhoneNumber = `${countryCode}${cleanLocalPhone}`;
 
@@ -349,8 +395,9 @@ export default function BookingForm({ lang = "ar" }) {
           goal: currentGoalLabel,
           goalKey: formData.goal,
           experience: currentExpLabel,
+          trainingDays: formData.trainingDays,
           notes: formData.notes,
-          calculatedStats: currentStats || null,
+          calculatedStats: currentStats,
           biomechanics: currentBio || null,
           locale: lang,
         }),
@@ -366,19 +413,23 @@ export default function BookingForm({ lang = "ar" }) {
           data.coachPhone || process.env.NEXT_PUBLIC_COACH_WHATSAPP_PHONE || "",
         fileId: data.fileId || "",
       });
-      setStatus({ loading: false, success: true, error: "" });
+      setStatus({
+        loading: false,
+        success: true,
+        error: "",
+        isCalcMissing: false,
+      });
     } catch (err) {
       setStatus({
         loading: false,
         success: false,
         error: err.message || ui.unexpectedError,
+        isCalcMissing: false,
       });
     }
   };
 
-  // =========================================================================
-  // کارت وضعیت موفقیت آمیز با دکمه اتصال مستقیم به واتس‌اپ مربی
-  // =========================================================================
+  // کارت موفقیت
   if (status.success) {
     const cleanCoachPhone = resultMeta.coachPhone
       .replace(/\+/g, "")
@@ -408,7 +459,11 @@ export default function BookingForm({ lang = "ar" }) {
       ? `\n${ui.success.waWeight} ${calcData.weight} kg`
       : "";
 
-    const waMessage = `${ui.success.waHello}\n${ui.success.waIm} *${formData.name}*، ${ui.success.waRegistered}\n📌 *${currentPlan.title}* (${currentPlan.duration})\n📋 ${ui.success.fileIdLabel} \`\`\`${resultMeta.fileId}\`\`\`\n\n${ui.success.waBiometricsHeader}${weightText}${calText}${bioText}\n\n${ui.success.waReady}`;
+    const trainingDaysText = formData.trainingDays
+      ? `\n${ui.success.waTrainingDays} ${formData.trainingDays} ${ui.trainingDaysUnit}`
+      : "";
+
+    const waMessage = `${ui.success.waHello}\n${ui.success.waIm} *${formData.name}*، ${ui.success.waRegistered}\n📌 *${currentPlan.title}* (${currentPlan.duration})\n📋 ${ui.success.fileIdLabel} \`\`\`${resultMeta.fileId}\`\`\`\n\n${ui.success.waBiometricsHeader}${weightText}${calText}${trainingDaysText}${bioText}\n\n${ui.success.waReady}`;
 
     const waLink = cleanCoachPhone
       ? `https://wa.me/${cleanCoachPhone}?text=${encodeURIComponent(waMessage)}`
@@ -456,12 +511,18 @@ export default function BookingForm({ lang = "ar" }) {
                 selectedPlanId: availablePlans[1]?.id || "pro",
                 goal: "cut",
                 experience: "beginner",
+                trainingDays: "4",
                 notes: "",
               });
               setCalcData(null);
               setBiomechanicsData(null);
               setSelectedPlanMeta(null);
-              setStatus({ loading: false, success: false, error: "" });
+              setStatus({
+                loading: false,
+                success: false,
+                error: "",
+                isCalcMissing: false,
+              });
             }}
             className="w-full cursor-pointer rounded-2xl border border-zinc-800 bg-zinc-900/80 px-6 py-4 text-xs font-bold text-zinc-300 transition-colors hover:border-zinc-700 hover:text-white sm:w-auto"
           >
@@ -494,9 +555,7 @@ export default function BookingForm({ lang = "ar" }) {
         </p>
       </div>
 
-      {/* ========================================================================= */}
-      {/* بخش بج‌های هوشمند (Smart Live Badges) متصل به ۳ سکشن قبلی */}
-      {/* ========================================================================= */}
+      {/* بخش بج‌های زنده */}
       {hasAnyBadge && (
         <div className="mb-8 space-y-3 rounded-3xl border border-fitness-primary/30 bg-gradient-to-b from-zinc-900/80 via-zinc-950 to-black p-4 sm:p-5 shadow-[0_0_30px_rgba(0,210,255,0.08)]">
           <div className="flex items-center gap-2 text-xs font-bold text-fitness-primary">
@@ -505,7 +564,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-            {/* ۱. بج فحص بیومکانیک و آناتومی */}
+            {/* ۱. بج فحص بیومکانیک */}
             {biomechanicsData && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -558,7 +617,7 @@ export default function BookingForm({ lang = "ar" }) {
               </div>
             )}
 
-            {/* ۲. بج ماشین‌حساب کالری و بیومتریک */}
+            {/* ۲. بج ماشین‌حساب */}
             {calcData && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -603,7 +662,7 @@ export default function BookingForm({ lang = "ar" }) {
               </div>
             )}
 
-            {/* ۳. بج باقه قیمتی انتخاب‌شده */}
+            {/* ۳. بج پلن قیمتی */}
             {selectedPlanMeta && (
               <div className="group relative flex flex-col justify-between rounded-2xl border border-fitness-primary/40 bg-black/60 p-3.5 backdrop-blur-md transition-all hover:border-fitness-primary">
                 <div>
@@ -642,9 +701,7 @@ export default function BookingForm({ lang = "ar" }) {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* فیلدهای فرم ثبت‌نام */}
-      {/* ========================================================================= */}
+      {/* فرم ثبت‌نام */}
       <form onSubmit={handleSubmit} className="space-y-6 text-start">
         {/* ۱. انتخاب باقه */}
         <div>
@@ -703,7 +760,7 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۲. نام و شماره واتس‌اپ همراه با سلکتور کشور */}
+        {/* ۲. نام و شماره تلفن همراه با پیش‌شماره */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
@@ -734,7 +791,6 @@ export default function BookingForm({ lang = "ar" }) {
               {ui.phoneLabel} <span className="text-fitness-primary">*</span>
             </label>
             <div className="relative flex rounded-2xl border border-zinc-800 bg-zinc-950/80 transition-all focus-within:border-fitness-primary focus-within:ring-1 focus-within:ring-fitness-primary">
-              {/* دراپ‌داون پیش‌شماره کشورهای عربی */}
               <div className="relative flex items-center border-e border-zinc-800 bg-zinc-900/60 rounded-s-2xl px-2.5">
                 <select
                   value={countryCode}
@@ -757,7 +813,6 @@ export default function BookingForm({ lang = "ar" }) {
                 </span>
               </div>
 
-              {/* اینپوت شماره تلفن کاربر */}
               <input
                 id="booking-phone"
                 type="tel"
@@ -815,7 +870,7 @@ export default function BookingForm({ lang = "ar" }) {
                   }
                   className={`cursor-pointer rounded-xl border p-2.5 text-center text-[11px] font-bold transition-all ${
                     formData.experience === exp.id
-                      ? "border-fitness-primary bg-fitness-primary/15 text-fitness-primary"
+                      ? "border-fitness-primary bg-fitness-primary/15 text-fitness-primary shadow-[0_0_12px_rgba(0,210,255,0.2)]"
                       : "border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:border-zinc-700 hover:text-white"
                   }`}
                 >
@@ -826,7 +881,47 @@ export default function BookingForm({ lang = "ar" }) {
           </div>
         </div>
 
-        {/* ۴. وضعیت سلامت، آسیب‌دیدگی‌ها و خلاصه آزمایش‌ها */}
+        {/* ۴. فیلد روزهای تمرین در هفته */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="text-xs font-bold text-white flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-fitness-primary" />
+              <span>{ui.trainingDaysLabel}</span>
+            </label>
+            <span className="font-mono text-xs font-black text-fitness-primary">
+              {formData.trainingDays} {ui.trainingDaysUnit}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {ui.trainingDaysOptions.map((opt) => {
+              const isSelected = formData.trainingDays === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, trainingDays: opt.id }))
+                  }
+                  className={`cursor-pointer flex flex-col items-center justify-center rounded-2xl border p-3 transition-all ${
+                    isSelected
+                      ? "border-fitness-primary bg-fitness-primary/15 text-fitness-primary shadow-[0_0_20px_rgba(0,210,255,0.25)] ring-1 ring-fitness-primary/60"
+                      : "border-zinc-800 bg-zinc-950/70 text-zinc-300 hover:border-zinc-700"
+                  }`}
+                >
+                  <span className="font-mono text-sm font-black">
+                    {opt.label}
+                  </span>
+                  <span className="mt-0.5 text-[9px] text-zinc-500">
+                    {opt.sub}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ۵. وضعیت سلامت و آسیب‌دیدگی‌ها */}
         <div>
           <label
             htmlFor="booking-notes"
@@ -845,10 +940,30 @@ export default function BookingForm({ lang = "ar" }) {
           />
         </div>
 
-        {/* خطا در صورت وجود */}
+        {/* کادر هشدار و خطای تکمیل ماشین‌حساب (بدون اسکرول ناگهانی) */}
         {status.error && (
-          <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 text-xs text-rose-400">
-            {status.error}
+          <div
+            className={`rounded-2xl border p-4 text-xs transition-all flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 ${
+              status.isCalcMissing
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.15)]"
+                : "border-rose-500/40 bg-rose-500/10 text-rose-300"
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <span className="font-medium leading-relaxed">
+                {status.error}
+              </span>
+            </div>
+            {status.isCalcMissing && (
+              <button
+                type="button"
+                onClick={scrollToCalculator}
+                className="cursor-pointer shrink-0 rounded-xl bg-amber-400 px-3.5 py-2 text-[11px] font-black text-black transition-transform hover:scale-105 active:scale-95"
+              >
+                {ui.goToCalcBtn}
+              </button>
+            )}
           </div>
         )}
 
